@@ -59,7 +59,6 @@ async def download_audio(name, artist, path):
   async with aiohttp.ClientSession() as session:
     id = await fetch_id(name, artist, session)
     if (id):
-      oldName = ""
       url = f"https://www.youtube.com/watch?v={id}"
 
       try:
@@ -81,7 +80,8 @@ async def download_audio(name, artist, path):
             }],
         }) as yt:
           info = yt.extract_info(url, download=True)
-          dName = info["requested_downloads"][0]['filepath'].split(".", 1)[0] + ".mp3"
+          # dName = info["requested_downloads"][0]['filepath'].split(".", 1)[0] + ".mp3"
+          dName = yt.prepare_filename(info).rsplit('.', 1)[0] + '.mp3'
 
         os.rename(dName, newName)
         cprint(f"{name} => {url}", color="green")

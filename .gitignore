@@ -9,3 +9,7 @@ out
 .DS_Store
 *.log*
 queue
+electron
+dist-electron
+electron-builder.json5
+package-lock.json
