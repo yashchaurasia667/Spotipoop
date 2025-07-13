@@ -1,16 +1,9 @@
-# from flask import Flask, request, jsonify
-# from flask_socketio import SocketIO, emit
-# from flask_cors import CORS
 from flask import request, jsonify
 from flask_socketio import emit
 from setup import socketio, app
 import SpotifyToTxt
 import TxtToMp3
 import asyncio
-
-# app = Flask(__name__)
-# CORS(app, origins=["http://localhost:5173"])
-# socketio = SocketIO(app, cors_allowed_origins="http://localhost:5173")
 
 SP = ''
 

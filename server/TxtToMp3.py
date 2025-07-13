@@ -1,7 +1,8 @@
 from setup import socketio
 from flask_socketio import emit
 from termcolor import cprint
-from pytube import YouTube
+# from pytube import YouTube
+import yt_dlp
 import pandas as pd
 import SpotifyToTxt
 import argparse
@@ -38,6 +39,7 @@ def progressBar(stream, chunk, bytes_remaning, emit_progress=None):
 
 
 async def fetch_id(name, artist, session):
+
   query = f"{name}+{artist}"
   query = query.split(" ")
   query = "+".join(query)
@@ -52,28 +54,40 @@ async def fetch_id(name, artist, session):
 
 
 async def download_audio(name, artist, path):
+  dName = ""
+
   async with aiohttp.ClientSession() as session:
     id = await fetch_id(name, artist, session)
     if (id):
-      link = f"https://www.youtube.com/watch?v={id}"
-      yt = YouTube(link, use_oauth=True, allow_oauth_cache=True, on_progress_callback=progressBar)
+      oldName = ""
+      url = f"https://www.youtube.com/watch?v={id}"
 
       try:
-        # dName = await asyncio.to_thread(yt.streams.get_audio_only().download, path)
         newName = os.path.join(path, f"{name}.mp3")
         if os.path.exists(newName):
-          print('Already downloaded')
+          print("Already downloaded")
           return 409
 
-        socketio.emit('start', {'title': name, 'id': Songid}, namespace='/')
+        socketio.emit("start", {"title": name, "id": Songid}, namespace='/')
 
-        dName = yt.streams.get_audio_only().download(path)
+        with yt_dlp.YoutubeDL({
+            "format": "bestaudio[ext=mp3]/best",
+            "outtmpl": "%(title)s.%(ext)s",
+            "quiet": True,
+            "postprocessors": [{
+                "key": "FFmpegExtractAudio",
+                "preferredcodec": "mp3",
+                "preferredquality": "192",
+            }],
+        }) as yt:
+          info = yt.extract_info(url, download=True)
+          dName = info["requested_downloads"][0]['filepath'].split(".", 1)[0] + ".mp3"
+
         os.rename(dName, newName)
-        cprint(f"{name} => {link}", color="green")
+        cprint(f"{name} => {url}", color="green")
 
         socketio.emit('complete', {'id': Songid}, namespace='/')
         return 200
-
       except Exception as e:
         cprint(f"Exception: {e}\nCode execution with continue shortly...", color="red")
     else:
