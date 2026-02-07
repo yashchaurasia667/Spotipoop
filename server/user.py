@@ -1,0 +1,38 @@
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+
+def getUserDetails():
+  user_details: dict[str, str] = {"id": "", "secret": ""}
+
+  user_id: str | None = os.getenv("SPOTIFY_ID")
+  user_secret: str | None = os.getenv("SPOTIFY_SECRET")
+
+  if user_id is not None:
+    user_details["id"] = user_id
+
+  if user_secret is not None:
+    user_details["secret"] = user_secret
+
+  return user_details
+
+
+def initUserCreation():
+  fp = open(".env", "w")
+  while True:
+    user_id = input("CLIENT ID: ")
+    user_secret = input("CLIENT SECRET: ")
+    if user_id != "" and user_secret != "":
+      fp.write(f"SPOTIFY_ID={user_id}")
+      fp.write("\n")
+      fp.write(f"SPOTIFY_SECRET={user_secret}")
+      fp.close()
+      return {"id": user_id, "secret": user_secret}
+
+
+if __name__ == "__main__":
+  user_details = getUserDetails()
+  if (user_details["id"] == "" or user_details["secret"] == ""):
+    initUserCreation()

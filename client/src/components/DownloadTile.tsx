@@ -8,13 +8,13 @@ import DownloadsContext from "../context/downloadsContext/DownloadsContext";
 
 import { downloads } from "../types/index";
 
-interface props {
-  title: string;
-  type: "name" | "playlist";
-  downloadPath: string;
-  coverPath: string;
-  complete: boolean;
-}
+// interface props {
+//   title: string;
+//   type: "Song" | "Playlist";
+//   downloadPath: string;
+//   coverPath: string;
+//   complete: boolean;
+// }
 
 interface style {
   display: "grid";
@@ -27,7 +27,7 @@ const DownloadTile = ({
   downloadPath,
   coverPath,
   complete,
-}: props) => {
+}: downloads) => {
   const context = useContext(DownloadsContext);
   if (!context) throw new Error("No Downloads context");
 

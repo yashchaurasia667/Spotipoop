@@ -1,8 +1,7 @@
 import { useContext, useEffect, useMemo } from "react";
-
 import DownloadTile from "./DownloadTile";
-
 import DownloadsContext from "../context/downloadsContext/DownloadsContext.ts";
+import { downloads } from "../types/index.ts";
 
 const Downloads = () => {
   const downloadContext = useContext(DownloadsContext);
@@ -13,7 +12,7 @@ const Downloads = () => {
     downloadContext;
 
   const inProgress = useMemo(() => {
-    return downloading.map((title, index) => (
+    return downloading.map((title: downloads, index) => (
       <DownloadTile key={index} {...title} />
     ));
   }, [downloading]);

@@ -38,7 +38,7 @@ const Navbar = () => {
   return (
     <div
       className={`flex items-center pl-4 pr-4 relative my-3 rounded-xl bg-[#242424] ${
-        keepOpen ? "w-[210px]" : "w-[95px] hover:w-[210px]"
+        keepOpen ? "w-52.5" : "w-23.75 hover:w-52.5"
       } transition-all overflow-hidden`}
       onMouseEnter={() =>
         !keepOpen ? setIsHovered(true) : setIsHovered(isHovered)
@@ -50,7 +50,7 @@ const Navbar = () => {
       <div className="flex flex-col gap-y-4">
         <FaSpotify
           size={60}
-          className="absolute top-6 left-[13px] text-purple-400"
+          className="absolute top-6 left-3.25 text-purple-400"
         />
         <NavLink to={"/"} className={"navlink"}>
           {pages.search}
@@ -69,11 +69,11 @@ const Navbar = () => {
         <div
           className={`bottom-0 mt-2 ${
             keepOpen ? "bg-purple-400" : "bg-[#acacac]"
-          }  h-[35px] w-[60px] px-7 py-3 rounded-full outline-none border-[#242424] border-2 relative transition-all duration-150`}
+          }  h-8.75 w-15 px-7 py-3 rounded-full outline-none border-[#242424] border-2 relative transition-all duration-150`}
           onClick={() => setKeepOpen((prev) => !prev)}
         >
           <div
-            className={`absolute top-1/2 -translate-y-1/2 toggle h-[25px] w-[25px] bg-[#242424] rounded-full transition-all ${
+            className={`absolute top-1/2 -translate-y-1/2 toggle h-6.25 w-6.25 bg-[#242424] rounded-full transition-all ${
               keepOpen ? "translate-x-0" : "-translate-x-full"
             }`}
           ></div>

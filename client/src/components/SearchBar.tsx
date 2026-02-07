@@ -58,7 +58,7 @@ const SearchBar = () => {
   };
 
   return (
-    <div className="w-[100%] h-[40%] p-5 self-end">
+    <div className="w-full h-[40%] p-5 self-end">
       <form
         method="post"
         className="flex md:flex-row flex-col justify-center items-center gap-x-3 gap-y-6"

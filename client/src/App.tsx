@@ -40,8 +40,8 @@ function App() {
         <Route path="downloads" element={<Downloads />} />
         <Route path="login" element={<Login />} />
         <Route path="help" element={<Help />} />
-      </Route>
-    )
+      </Route>,
+    ),
   );
 
   return <RouterProvider router={router} />;

@@ -83,8 +83,8 @@ const SongTile = ({
   }, [socket, createDownload, id, images, name]);
 
   return (
-    <div className="overflow-hidden font-semibold w-[100%] h-[80px] grid grid-cols-[3fr_2fr_1fr_1fr] gap-x-8 items-center rounded-lg bg-[#242424] mt-3 px-6 py-4">
-      <div className="flex items-center gap-x-4 max-h-[80px] overflow-hidden group1">
+    <div className="overflow-hidden font-semibold w-full h-20 grid grid-cols-[3fr_2fr_1fr_1fr] gap-x-8 items-center rounded-lg bg-[#242424] mt-3 px-6 py-4">
+      <div className="flex items-center gap-x-4 max-h-20 overflow-hidden group1">
         <div>{index}</div>
         <img
           src={images}
