@@ -40,7 +40,7 @@ const DownloadsContextProvider: React.FC<DownloadsContextProviderProps> = ({
     name: string,
     id: string,
     type: "Song" | "Playlist",
-    complete: boolean
+    complete: boolean,
   ) => {
     const path = localStorage.getItem("downloadPath");
 

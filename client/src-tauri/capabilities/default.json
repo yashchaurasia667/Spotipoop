@@ -5,6 +5,24 @@
   "windows": ["main"],
   "permissions": [
     "core:default",
-    "opener:default"
+    "opener:default",
+    {
+      "identifier": "shell:allow-spawn",
+      "allow": [
+        {
+          "name": "binaries/backend",
+          "sidecar": true
+        }
+      ]
+    },
+    {
+      "identifier": "shell:allow-stdin-write",
+      "allow": [
+        {
+          "name": "binaries/backend",
+          "sidecar": true
+        }
+      ]
+    }
   ]
 }

@@ -38,7 +38,14 @@ function App() {
           }
         ></Route>
         <Route path="downloads" element={<Downloads />} />
-        <Route path="login" element={<Login />} />
+        <Route
+          path="login"
+          element={
+            <GlobalContextProvider>
+              <Login />
+            </GlobalContextProvider>
+          }
+        />
         <Route path="help" element={<Help />} />
       </Route>,
     ),

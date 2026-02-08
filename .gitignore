@@ -13,6 +13,6 @@ electron
 dist-electron
 electron-builder.json5
 package-lock.json
-main.spec
+*.spec
 build
 target
