@@ -1,9 +1,37 @@
+from spotify import searchSpotify
 import user
 import os
 import yt_dlp
+import requests
+from mutagen.id3 import ID3, TIT2, TALB, TPE1, APIC, ID3NoHeaderError
 
 DOWNLOAD_PATH = "downloads"
 
+def addMetadata(file_path, title, artist, album, cover_path=None):
+  try:
+    try:
+      tags = ID3(file_path)
+    except ID3NoHeaderError:
+      tags = ID3()
+
+    tags["TIT2"] = TIT2(encoding=3, text=title)
+    tags["TPE1"] = TPE1(encoding=3, text=artist)
+    tags["TALB"] = TALB(encoding=3, text=album)
+
+    if cover_path and os.path.exists(cover_path):
+      with open(cover_path, 'rb') as img:
+        tags["APIC"] = APIC(
+          mime='image/jpeg',
+          encoding=3,
+          type=3,
+          desc=u'Cover',
+          data=img.read()
+        )
+
+    tags.save(file_path, v2_version=3)
+    print(f"Success: Metadata and Cover embedded in {file_path}")
+  except Exception as e:
+      print(f"Metadata Error: {e}")
 
 def getYoutubeLink(query: str, limit: int = 5):
   """
@@ -31,11 +59,12 @@ def getYoutubeLink(query: str, limit: int = 5):
     return [f"Error: {e}"]
 
 
-def downloadAudio(name, artist, quality):
+def downloadAudio(track, quality):
   print()
-  query = f"{name} {artist} official audio"
+  query = f"{track.get("name")} {track.get("artist")} official audio"
+  if track.get("explicit"):
+    query = f"{query} explicit"
 
-  # 1. Get a list of candidates (e.g., top 5)
   video_urls = getYoutubeLink(query, limit=5)
 
   if not video_urls:
@@ -43,6 +72,12 @@ def downloadAudio(name, artist, quality):
 
   if not os.path.exists(DOWNLOAD_PATH):
     os.makedirs(DOWNLOAD_PATH)
+  
+  tmp_cover = f"{track.get("name")}.jpg"
+  if track.get("cover"):
+    img_data = requests.get(track.get("cover")).content
+    with open(tmp_cover, "wb") as handler:
+      handler.write(img_data)
 
   ydl_opts = {
       'format': 'bestaudio/best',
@@ -58,24 +93,27 @@ def downloadAudio(name, artist, quality):
   }
 
   with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-    print(f"--- Found {len(video_urls)} options for: {name} ---")
+    print(f"--- Found {len(video_urls)} options for: {track.get("name")} ---")
 
     # 2. Iterate through the candidates
     for i, url in enumerate(video_urls):
       try:
         print(f"Attempting option {i+1}...")
-        ydl.download([url])
-        # 3. IF WE REACH HERE, SUCCESS!
-        # We return immediately, stopping the loop and the function.
+        info = ydl.extract_info(url, download=True)
+        base_path = ydl.prepare_filename(info)
+        final_mp3_path = os.path.splitext(base_path)[0] + ".mp3"
+
+        addMetadata(final_mp3_path, track.get("name"), track.get("artist"), track.get("album"), tmp_cover)
+        if os.path.exists(tmp_cover):
+          os.remove(tmp_cover)
+
         return f"Success! Downloaded using option {i+1}."
 
       except Exception as e:
-        # 4. IF FAILURE, CATCH IT AND CONTINUE
         print(f"Option {i+1} failed. Reason: {e}")
         print("Trying next link...\n")
         continue
 
-  # 5. If the loop finishes without returning, all links failed
   return "Error: All download attempts failed."
 
 
@@ -83,6 +121,9 @@ if __name__ == "__main__":
   user_details = user.getUserDetails()
   if (user_details["id"] == "" or user_details["secret"] == ""):
     user_details = user.initUserCreation()
+  
+  res = searchSpotify("vampire")
+  downloadAudio(res[0], 320)
 
   # tracks = spotify.searchSpotify("so american")
   # if len(tracks) > 0:

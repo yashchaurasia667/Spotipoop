@@ -27,9 +27,6 @@ const Login = () => {
     e.preventDefault();
     if (id != "" && secret != "") {
       try {
-        // for (let i = 0; i < 5; i++) {
-        //   childProc?.write("\n");
-        // }
         if (backendStatus && childProc) {
           console.log("setting creds")
           childProc.write("0\n");

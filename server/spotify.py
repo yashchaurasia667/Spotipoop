@@ -1,3 +1,4 @@
+from unittest import result
 import user
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
@@ -38,7 +39,7 @@ def format_track(track):
   images = album_data.get('images', [])
   thumbnail = images[0]['url'] if images else None
 
-  return {"id": track.get('id'), "name": track.get('name'), "artist": track['artists'][0]['name'] if track.get('artists') else "Unknown Artist", "thumbnail": thumbnail, "album": album_data.get('name', "Unknown Album"), "length": length}
+  return {"id": track.get('id'), "name": track.get('name'), "artist": track['artists'][0]['name'] if track.get('artists') else "", "cover": thumbnail, "album": album_data.get('name', "Unknown Album"), "length": length, "explicit": track.get("explicit", False)}
 
 
 def searchSpotify(query: str):
@@ -97,6 +98,7 @@ if __name__ == "__main__":
   # Test with a known public playlist
   test_id = "37i9dQZF1DXaohnPXGkLv6"
   result = getPlaylistFromId(test_id)
+  # result = getAlbumFromId("5WulAOx9ilWy1h8UGZ1gkI")
 
   if "error" in result:
     print(f"Error occurred: {result['error']}")
