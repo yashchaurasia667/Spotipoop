@@ -1,29 +1,8 @@
 import user
+import utils
 import spotify
 import download
 import os
-import re
-
-
-def extractId(url: str):
-  """
-    Returns a tuple of (id, type) e.g., ("abc123...", "album")
-    """
-  # Pattern looks for 'playlist/' OR 'album/'
-  pattern = r"(playlist|album)/([a-zA-Z0-9]{22})"
-  match = re.search(pattern, url)
-
-  if match:
-    return match.group(2), match.group(1)
-  return "", ""
-
-
-def clean_filename(name: str):
-  """
-    Removes characters that are illegal in Windows/Linux filenames.
-    """
-  return re.sub(r'[<>:"/\\|?*]', '', name).strip()
-
 
 if __name__ == "__main__":
   # 0. Initial Credential Check
@@ -65,11 +44,13 @@ if __name__ == "__main__":
       name = input("Track Name: ")
       artist = input("Artist: ")
       quality = input("Quality (e.g., 320, 128): ")
-      download.downloadAudio(name, artist, quality)
+
+      res = spotify.searchSpotify(f"{name} {artist}")
+      download.downloadAudio(res[0], quality)
 
     elif choice == 2:
       link = input("Enter playlist/album link: ")
-      collection_id, collection_type = extractId(link)
+      collection_id, collection_type = utils.extractId(link)
 
       if collection_id:
         collection = spotify.getPlaylistFromId(collection_id) if collection_type == "playlist" else spotify.getAlbumFromId(collection_id)
@@ -90,11 +71,10 @@ if __name__ == "__main__":
       print("\n:::SEARCH RESULTS:::")
       for i, t in enumerate(tracks):
         print(f"{i+1}. {t['name']} - {t['artist']} [{t['length']}]")
-      print("\n:::SEARCH RESULTS END:::")
 
     elif choice == 5:
       link = input("Enter playlist/album link to download: ")
-      c_id, c_type = extractId(link)
+      c_id, c_type = utils.extractId(link)
 
       collection = None
       if c_type == "playlist":
@@ -103,22 +83,17 @@ if __name__ == "__main__":
         collection = spotify.getAlbumFromId(c_id)
 
       if collection and "songs" in collection:
-        # Store original path to reset later
         original_base = download.DOWNLOAD_PATH
 
-        # Create a safe folder name
-        folder_name = clean_filename(collection["name"])
-
+        folder_name = utils.clean_filename(collection["name"])
         download.DOWNLOAD_PATH = os.path.join(original_base, folder_name)
 
         print(f"\nStarting bulk download to: {download.DOWNLOAD_PATH}")
-
         for i, track in enumerate(collection["songs"]):
-          print(f"[{i+1}/{len(collection['songs'])}] Downloading: {track['name']}")
+          print(f"\n[{i+1}/{len(collection['songs'])}] Downloading: {track['name']}")
           # Using 320 as default quality for bulk
-          download.downloadAudio(track["name"], track["artist"], "320")
+          download.downloadAudio(track, "320")
 
         download.DOWNLOAD_PATH = original_base
-        print("\n--- Bulk Download Finished ---")
       else:
         print("Failed to load collection.")

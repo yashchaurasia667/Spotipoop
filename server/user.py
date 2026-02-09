@@ -1,4 +1,5 @@
 import os
+from pydoc import cli
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -19,8 +20,15 @@ def getUserDetails():
   return user_details
 
 
-def initUserCreation():
+def initUserCreation(client_id=None, client_secret=None):
   fp = open("../../.env", "w")
+  if client_id and client_secret:
+    fp.write(f"VITE_SPOTIFY_ID={user_id}")
+    fp.write("\n")
+    fp.write(f"VITE_SPOTIFY_SECRET={user_secret}")
+    fp.close()
+    return
+
   while True:
     user_id = input("CLIENT ID: ")
     user_secret = input("CLIENT SECRET: ")

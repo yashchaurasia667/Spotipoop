@@ -1,8 +1,9 @@
-from spotify import searchSpotify
 import user
+import utils
 import os
 import yt_dlp
 import requests
+from spotify import searchSpotify
 from mutagen.id3 import ID3, TIT2, TALB, TPE1, APIC, ID3NoHeaderError
 
 DOWNLOAD_PATH = "downloads"
@@ -60,7 +61,6 @@ def getYoutubeLink(query: str, limit: int = 5):
 
 
 def downloadAudio(track, quality):
-  print()
   query = f"{track.get("name")} {track.get("artist")} official audio"
   if track.get("explicit"):
     query = f"{query} explicit"
@@ -73,7 +73,7 @@ def downloadAudio(track, quality):
   if not os.path.exists(DOWNLOAD_PATH):
     os.makedirs(DOWNLOAD_PATH)
   
-  tmp_cover = f"{track.get("name")}.jpg"
+  tmp_cover = f"{utils.clean_filename(track.get("name"))}.jpg"
   if track.get("cover"):
     img_data = requests.get(track.get("cover")).content
     with open(tmp_cover, "wb") as handler:
