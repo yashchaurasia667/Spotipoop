@@ -25,20 +25,30 @@ const Login = () => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (id != "" && secret != "") {
-      try {
-        if (backendStatus && childProc) {
-          console.log("setting creds")
-          childProc.write("0\n");
-          childProc.write(`${id}\n`);
-          childProc.write(`${secret}\n`);
-        }
-        toast.success("Credentials set");
-        console.log("Credentials set", { style: toastStyle });
-      } catch (error) {
-        console.error(`Something went wrong while logging in: ${error}`);
-        toast.error("Failed to set Credentials", { style: toastStyle });
-      }
+    if (!id.trim() || !secret.trim()) {
+      toast.error("Please fill in both fields");
+      return;
+    }
+
+    if (!backendStatus || !childProc) {
+      toast.error("Backend is not ready yet. Please wait.");
+      return;
+    }
+
+    try {
+      const data = {
+        choice: 0,
+        id: id,
+        secret: secret,
+      };
+
+      await childProc.write(JSON.stringify(data) + "\n");
+      toast.success("syncing credentials...");
+      setId("");
+      setSecret("");
+    } catch (error) {
+      console.error(`Something went wrong while logging in: ${error}`);
+      toast.error("Failed to set Credentials", { style: toastStyle });
     }
   };
 

@@ -12,14 +12,15 @@ def getSpotifyClient():
 
   # Trigger user creation if credentials are missing
   if not user_details.get("id") or not user_details.get("secret"):
-    user_details = user.initUserCreation()
+    user_details = user.createEnv()
 
   auth_manager = SpotifyClientCredentials(client_id=user_details["id"], client_secret=user_details["secret"])
   return spotipy.Spotify(auth_manager=auth_manager)
 
 
 # Initialize the client ONCE at the start of the script execution
-sp = getSpotifyClient()
+# sp = getSpotifyClient()
+sp = None
 
 
 def format_track(track):
@@ -47,6 +48,8 @@ def searchSpotify(query: str):
     Searches for tracks and returns a formatted list.
     """
   try:
+    if not sp:
+      sp = getSpotifyClient()
     results = sp.search(q=query, limit=10, type="track")
     return [format_track(item) for item in results['tracks']['items']]
   except Exception as e:
@@ -58,6 +61,9 @@ def getPlaylistFromId(playlist_id: str):
     Fetches all tracks from a playlist using pagination.
     """
   try:
+    if not sp:
+      sp = getSpotifyClient()
+
     playlist = sp.playlist(playlist_id, market="US")
     data = {"name": playlist['name'], "owner": playlist['owner']['display_name'], "thumbnail": playlist['images'][0]['url'] if playlist['images'] else None, "total_tracks": playlist['tracks']['total'], "songs": []}
 
@@ -80,6 +86,9 @@ def getAlbumFromId(album_id: str):
     Fetches all tracks from an album.
     """
   try:
+    if not sp:
+      sp = getSpotifyClient()
+
     album = sp.album(album_id)
     data = {"name": album['name'], "owner": album['artists'][0]['name'], "thumbnail": album['images'][0]['url'] if album['images'] else None, "total_tracks": album['tracks']['total'], "songs": []}
 
@@ -95,6 +104,8 @@ def getAlbumFromId(album_id: str):
 
 
 if __name__ == "__main__":
+  print("running spotify main")
+
   # Test with a known public playlist
   test_id = "37i9dQZF1DXaohnPXGkLv6"
   result = getPlaylistFromId(test_id)

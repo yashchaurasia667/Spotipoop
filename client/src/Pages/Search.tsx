@@ -1,3 +1,6 @@
+import { exists, readTextFile } from "@tauri-apps/plugin-fs";
+import { appDataDir, join } from "@tauri-apps/api/path";
+
 import React, { useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -23,18 +26,30 @@ const Search: React.FC = () => {
 
   // check for credentials in .env file
   useEffect(() => {
-    const id = import.meta.env.VITE_SPOTIFY_ID;
-    const secret = import.meta.env.VITE_SPOTIFY_SECRET;
-    if (!id || !secret) navigate("/login");
-    else {
-      const toastStyle = {
-        backgroundColor: "#232323",
-      };
-      toast.success("Connected to Spotify", {
-        style: toastStyle,
-      });
-    }
-  }, []);
+    const checkCreds = async () => {
+      const appData = await appDataDir();
+      const envPath = await join(appData, ".env");
+
+      const fileExists = await exists(envPath);
+
+      if (!fileExists) {
+        navigate("/login");
+        return;
+      }
+
+      const content = await readTextFile(envPath);
+      if (!content.includes("VITE_SPOTIFY_ID") || !content.includes("VITE_SPOTIFY_SECRET")) {
+        navigate("/login");
+      } else {
+        console.log(content)
+        toast.success("Connected to Spotify", {
+          style: { backgroundColor: "#232323" },
+        });
+      }
+    };
+
+    checkCreds();
+  }, [navigate]);
 
   return (
     <div className="grid grid-rows-[3fr_5fr] p-5 h-screen">

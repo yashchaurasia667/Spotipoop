@@ -8,7 +8,7 @@ if __name__ == "__main__":
   # 0. Initial Credential Check
   user_details = user.getUserDetails()
   if user_details["id"] == "" or user_details["secret"] == "":
-    user_details = user.initUserCreation()
+    user_details = user.createEnv()
 
   # Ensure spotify client is ready
   # spotify.initialize_spotify()
@@ -38,7 +38,7 @@ if __name__ == "__main__":
       continue
 
     if choice == 0:
-      user_details = user.initUserCreation()
+      user_details = user.createEnv()
 
     elif choice == 1:
       name = input("Track Name: ")

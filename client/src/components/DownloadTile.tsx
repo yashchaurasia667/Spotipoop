@@ -33,9 +33,9 @@ const DownloadTile = ({
 
   const { initDownloads } = context;
 
-  const socket = io("http://localhost:5000", {
-    transports: ["websocket", "polling"],
-  });
+  // const socket = io("http://localhost:5000", {
+  //   transports: ["websocket", "polling"],
+  // });
 
   const [downloadComplete, setDownloadComplete] = useState<boolean>(complete);
   const [progress, setProgress] = useState<style>({
@@ -70,20 +70,20 @@ const DownloadTile = ({
     console.log("download removed");
   };
 
-  useEffect(() => {
-    socket.on("progress", (data) => {
-      console.log(data);
-      setProgress({
-        display: "grid",
-        gridTemplateColumns: `${data.progress}fr ${10 - data.progress}fr`,
-      });
-      if (data.progress == 10) setDownloadComplete(true);
-    });
+  // useEffect(() => {
+  //   socket.on("progress", (data) => {
+  //     console.log(data);
+  //     setProgress({
+  //       display: "grid",
+  //       gridTemplateColumns: `${data.progress}fr ${10 - data.progress}fr`,
+  //     });
+  //     if (data.progress == 10) setDownloadComplete(true);
+  //   });
 
-    return () => {
-      socket.off("progress");
-    };
-  }, [socket]);
+  //   return () => {
+  //     socket.off("progress");
+  //   };
+  // }, [socket]);
 
   return (
     <div className="h-[100px] rounded-lg bg-[#242424] px-6 py-4 grid grid-cols-[9fr_1fr] items-center">

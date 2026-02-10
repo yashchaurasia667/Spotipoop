@@ -1,5 +1,4 @@
 import React, { useContext, useEffect } from "react";
-import { io } from "socket.io-client";
 import { toast } from "react-toastify";
 
 import { FaArrowDown } from "react-icons/fa";
@@ -11,27 +10,27 @@ const PlaylistTile = ({ cover = "", name = "", link = "" }) => {
     backgroundColor: "#232323",
   };
 
-  const socket = io("http://localhost:5000", {
-    transports: ["websocket", "polling"],
-  });
+  // const socket = io("http://localhost:5000", {
+  //   transports: ["websocket", "polling"],
+  // });
 
   const context = useContext(DownloadsContext);
   if (!context) throw new Error("No Downloads context");
 
   const { createDownload } = context;
 
-  useEffect(() => {
-    socket.on("start", (data) => {
-      if (data.id == link) {
-        console.log("data: ", data);
-        createDownload(cover, name, link, "Playlist", false);
-      }
-    });
+  // useEffect(() => {
+  //   socket.on("start", (data) => {
+  //     if (data.id == link) {
+  //       console.log("data: ", data);
+  //       createDownload(cover, name, link, "Playlist", false);
+  //     }
+  //   });
 
-    return () => {
-      socket.off("start");
-    };
-  }, [socket, createDownload, cover, link, name]);
+  //   return () => {
+  //     socket.off("start");
+  //   };
+  // }, [socket, createDownload, cover, link, name]);
 
   const handleDownload = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();

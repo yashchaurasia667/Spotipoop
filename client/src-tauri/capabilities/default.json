@@ -5,7 +5,18 @@
   "windows": ["main"],
   "permissions": [
     "core:default",
+    "core:path:default",
     "opener:default",
+    "shell:default",
+    "fs:default",
+    {
+      "identifier": "fs:allow-exists",
+      "comment": "Explicitly allow exists if default isn't enough"
+    },
+    {
+      "identifier": "fs:scope",
+      "allow": [{ "path": "$APPDATA/**" }]
+    },
     {
       "identifier": "shell:allow-spawn",
       "allow": [

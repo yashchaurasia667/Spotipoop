@@ -1,10 +1,10 @@
-import user
-import utils
 import os
 import yt_dlp
 import requests
-from spotify import searchSpotify
 from mutagen.id3 import ID3, TIT2, TALB, TPE1, APIC, ID3NoHeaderError
+import user
+import utils
+from spotify import searchSpotify
 
 DOWNLOAD_PATH = "downloads"
 
@@ -118,9 +118,11 @@ def downloadAudio(track, quality):
 
 
 if __name__ == "__main__":
+  print("runnign download main")
+
   user_details = user.getUserDetails()
   if (user_details["id"] == "" or user_details["secret"] == ""):
-    user_details = user.initUserCreation()
+    user_details = user.createEnv()
   
   res = searchSpotify("vampire")
   downloadAudio(res[0], 320)

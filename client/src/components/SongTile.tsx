@@ -1,8 +1,5 @@
 import { useContext, useEffect } from "react";
-
 import { toast } from "react-toastify";
-import { io } from "socket.io-client";
-
 import { Song } from "../types";
 
 import DownloadsContext from "../context/downloadsContext/DownloadsContext";
@@ -20,9 +17,9 @@ const SongTile = ({
     backgroundColor: "#232323",
   };
 
-  const socket = io("http://localhost:5000", {
-    transports: ["websocket", "polling"],
-  });
+  // const socket = io("http://localhost:5000", {
+  //   transports: ["websocket", "polling"],
+  // });
 
   const context = useContext(DownloadsContext);
   if (!context) throw new Error("No Downloads context");
@@ -69,18 +66,18 @@ const SongTile = ({
     }
   };
 
-  useEffect(() => {
-    socket.on("start", (data) => {
-      if (data.id == id) {
-        console.log("download started ", data);
-        createDownload(images, name, id, "Song", false);
-      }
-    });
+  // useEffect(() => {
+  //   socket.on("start", (data) => {
+  //     if (data.id == id) {
+  //       console.log("download started ", data);
+  //       createDownload(images, name, id, "Song", false);
+  //     }
+  //   });
 
-    return () => {
-      socket.off("start");
-    };
-  }, [socket, createDownload, id, images, name]);
+  //   return () => {
+  //     socket.off("start");
+  //   };
+  // }, [socket, createDownload, id, images, name]);
 
   return (
     <div className="overflow-hidden font-semibold w-full h-20 grid grid-cols-[3fr_2fr_1fr_1fr] gap-x-8 items-center rounded-lg bg-[#242424] mt-3 px-6 py-4">

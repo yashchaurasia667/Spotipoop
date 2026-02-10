@@ -1,8 +1,6 @@
 import os
-from pydoc import cli
-from dotenv import load_dotenv
 
-load_dotenv()
+ENV_PATH = ".env"
 
 
 def getUserDetails():
@@ -20,14 +18,31 @@ def getUserDetails():
   return user_details
 
 
-def initUserCreation(client_id=None, client_secret=None):
-  fp = open("../../.env", "w")
-  if client_id and client_secret:
-    fp.write(f"VITE_SPOTIFY_ID={user_id}")
-    fp.write("\n")
-    fp.write(f"VITE_SPOTIFY_SECRET={user_secret}")
-    fp.close()
-    return
+def initUserCreation(client_id, client_secret):
+  # Construct the strings in standard .env format
+  content = f"VITE_SPOTIFY_ID={client_id}\nVITE_SPOTIFY_SECRET={client_secret}\n"
+
+  try:
+    folder = os.path.dirname(ENV_PATH)
+    if folder and not os.path.exists(folder):
+      os.makedirs(folder, exist_ok=True)
+    with open(ENV_PATH, "w") as f:
+      f.write(content)
+  except Exception as e:
+    print(f"Failed to write .env: {e}")
+
+
+def update_env_path(new_path):
+  global ENV_PATH
+  # Ensure the path includes the filename if it's just a directory
+  if os.path.isdir(new_path):
+    ENV_PATH = os.path.join(new_path, ".env")
+  else:
+    ENV_PATH = new_path
+
+
+def createEnv():
+  fp = open(ENV_PATH, "w")
 
   while True:
     user_id = input("CLIENT ID: ")
@@ -41,6 +56,7 @@ def initUserCreation(client_id=None, client_secret=None):
 
 
 if __name__ == "__main__":
+  print("running user main")
   user_details = getUserDetails()
   if (user_details["id"] == "" or user_details["secret"] == ""):
-    initUserCreation()
+    createEnv()

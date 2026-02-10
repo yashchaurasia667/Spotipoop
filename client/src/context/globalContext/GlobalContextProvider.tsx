@@ -1,5 +1,7 @@
-import React, { useState, ReactNode, useEffect, useRef } from "react";
 import { Child, Command } from "@tauri-apps/plugin-shell";
+import { appDataDir } from '@tauri-apps/api/path';
+
+import React, { useState, ReactNode, useEffect, useRef } from "react";
 import GlobalContext from "./GlobalContext";
 import { Song, playlist } from "../../types";
 
@@ -42,7 +44,14 @@ const GlobalContextProvider: React.FC<GlobalContextProviderProps> = ({ children 
       });
 
       const child = await command.spawn();
+      console.log(`Appdata path: ${await appDataDir()}`)
       console.log(`Backend started. PID: ${child.pid}`);
+
+      const envFilePath = await appDataDir() + "/.env";
+      child.write(JSON.stringify({
+        choice: 6,
+        env_path: envFilePath
+      }) + "\n");
 
       childRef.current = child;
       setChildProc(child);
