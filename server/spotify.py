@@ -3,6 +3,8 @@ import user
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
 
+# Initialize the client ONCE at the start of the script execution
+sp = None
 
 def getSpotifyClient():
   """
@@ -16,11 +18,6 @@ def getSpotifyClient():
 
   auth_manager = SpotifyClientCredentials(client_id=user_details["id"], client_secret=user_details["secret"])
   return spotipy.Spotify(auth_manager=auth_manager)
-
-
-# Initialize the client ONCE at the start of the script execution
-# sp = getSpotifyClient()
-sp = None
 
 
 def format_track(track):
@@ -47,9 +44,11 @@ def searchSpotify(query: str):
   """
     Searches for tracks and returns a formatted list.
     """
+  global sp
   try:
     if not sp:
       sp = getSpotifyClient()
+
     results = sp.search(q=query, limit=10, type="track")
     return [format_track(item) for item in results['tracks']['items']]
   except Exception as e:
@@ -60,6 +59,7 @@ def getPlaylistFromId(playlist_id: str):
   """
     Fetches all tracks from a playlist using pagination.
     """
+  global sp
   try:
     if not sp:
       sp = getSpotifyClient()
@@ -85,6 +85,7 @@ def getAlbumFromId(album_id: str):
   """
     Fetches all tracks from an album.
     """
+  global sp
   try:
     if not sp:
       sp = getSpotifyClient()
@@ -107,11 +108,15 @@ if __name__ == "__main__":
   print("running spotify main")
 
   # Test with a known public playlist
-  test_id = "37i9dQZF1DXaohnPXGkLv6"
-  result = getPlaylistFromId(test_id)
+  # test_id = "37i9dQZF1DXaohnPXGkLv6"
+  # result = getPlaylistFromId(test_id)
   # result = getAlbumFromId("5WulAOx9ilWy1h8UGZ1gkI")
 
-  if "error" in result:
-    print(f"Error occurred: {result['error']}")
-  else:
-    print(f"Successfully fetched: {result['name']} ({len(result['songs'])} songs)")
+  # if "error" in result:
+  #   print(f"Error occurred: {result['error']}")
+  # else:
+  #   print(f"Successfully fetched: {result['name']} ({len(result['songs'])} songs)")
+
+  tracks = searchSpotify("obsessed")
+  for i, t in enumerate(tracks):
+    print(f"{i+1}. {t["name"]}, {t["artist"]}")

@@ -1,6 +1,7 @@
 import { useContext } from "react";
 
 import { FaChevronDown } from "react-icons/fa";
+import { toast } from "react-toastify";
 import GlobalContext from "../context/globalContext/GlobalContext";
 
 const SearchBar = () => {
@@ -15,46 +16,68 @@ const SearchBar = () => {
     setPlaylist,
     setLoading,
     setSongs,
+    backendStatus,
+    childProc,
   } = context;
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (query == "") return;
 
+    if (!backendStatus || !childProc) {
+      toast.error("Backend is not ready yet. Please wait.");
+      return;
+    }
+
     setLoading(true);
     setSongs([]);
     setPlaylist(undefined);
-    try {
-      const res = await fetch("/api", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ query, qtype }),
-      });
 
-      const data = await res.json();
-      if (data.success) {
-        if (qtype == "Playlist") {
-          setPlaylist({
-            cover: data.cover,
-            name: data.name,
-            link: query,
-          });
-        }
-        // else {
-        //   setPlaylist((prev) => ({
-        //     ...prev,
-        //     name: "",
-        //   }));
-        // }
-        setSongs(data.songs);
-      } else if (!data.success) throw new Error("Check the playlist link");
+    try {
+      const choice = qtype === "Name" ? 4 : 2;
+      const data = {
+        choice: choice,
+        query: query,
+        link: query, 
+      };
+      console.log(JSON.stringify(data));
+
+      await childProc.write(JSON.stringify(data) + "\n");
     } catch (error) {
-      console.error(`Error fetching songs: ${error}`);
-    } finally {
-      setLoading(false);
+      console.error("error occured while searching ", error);
     }
+
+    //   try {
+    // const res = await fetch("/api", {
+    //   method: "POST",
+    //   headers: {
+    //     "Content-Type": "application/json",
+    //   },
+    //   body: JSON.stringify({ query, qtype }),
+    // });
+
+    // const data = await res.json();
+    // if (data.success) {
+    //   if (qtype == "Playlist") {
+    //     setPlaylist({
+    //       cover: data.cover,
+    //       name: data.name,
+    //       link: query,
+    //     });
+    //   }
+    // else {
+    //   setPlaylist((prev) => ({
+    //     ...prev,
+    //     name: "",
+    //   }));
+    // }
+    //       setSongs(data.songs);
+    //     } else if (!data.success) throw new Error("Check the playlist link");
+    //   } catch (error) {
+    //     console.error(`Error fetching songs: ${error}`);
+    //   } finally {
+    //     setLoading(false);
+    //   }
   };
 
   return (

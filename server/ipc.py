@@ -33,8 +33,7 @@ def main():
 
         if collection_id:
           collection = spotify.getPlaylistFromId(collection_id) if collection_type == "playlist" else spotify.getAlbumFromId(collection_id)
-          print(f"\n:::{collection_type.upper()} DETAILS:::")
-          print(collection)
+          print(json.dumps({"type": "search_playlist", "data": collection}),flush=True)
         else:
           print("Invalid link.")
 
@@ -46,7 +45,7 @@ def main():
       # search for a track
       elif command["choice"] == 4:
         tracks = spotify.searchSpotify(command["query"])
-        print(json.dumps({"type": "search_results", "data": tracks}), flush=True)
+        print(json.dumps({"type": "search_songs", "data": tracks}), flush=True)
 
       # download album/playlist
       elif command["choice"] == 5:

@@ -1,9 +1,11 @@
 import os
+import utils
 
 ENV_PATH = ".env"
 
 
 def getUserDetails():
+  utils.load_config(ENV_PATH)
   user_details: dict[str, str] = {"id": "", "secret": ""}
 
   user_id: str | None = os.getenv("VITE_SPOTIFY_ID")

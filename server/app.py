@@ -46,7 +46,11 @@ if __name__ == "__main__":
       quality = input("Quality (e.g., 320, 128): ")
 
       res = spotify.searchSpotify(f"{name} {artist}")
-      download.downloadAudio(res[0], quality)
+      choice = 0
+      for i, t in enumerate(res):
+        print(f"{i+1}. {t['name']} - {t['artist']} [{t['length']}]")
+      choice = int(input("which to download? "))
+      download.downloadAudio(res[choice-1], quality)
 
     elif choice == 2:
       link = input("Enter playlist/album link: ")
