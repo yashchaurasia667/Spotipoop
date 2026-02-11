@@ -17,6 +17,7 @@ const GlobalContextProvider: React.FC<GlobalContextProviderProps> = ({
   const isSpawning = useRef(false);
 
   // States
+  const [downloadPath, setDownloadPath] = useState<string>("");
   const [query, setQuery] = useState<string>("");
   const [qtype, setQtype] = useState<"Playlist" | "Name">("Name");
   const [loading, setLoading] = useState<boolean>(false);
@@ -27,6 +28,7 @@ const GlobalContextProvider: React.FC<GlobalContextProviderProps> = ({
     owner: "",
     length: 0,
     tracks: [],
+    link: "",
   });
 
   const startBackend = async () => {
@@ -43,7 +45,7 @@ const GlobalContextProvider: React.FC<GlobalContextProviderProps> = ({
       });
 
       command.stdout.on("data", (line) => {
-        // console.log(`[Python Stdout]: ${line}`);
+        console.log(`[Python Stdout]: ${line}`);
         try {
           const trimmedLine = line.trim();
           if (trimmedLine.startsWith("{")) {
@@ -58,6 +60,7 @@ const GlobalContextProvider: React.FC<GlobalContextProviderProps> = ({
                 cover: parsed.data.thumbnail,
                 length: parsed.data.total_tracks,
                 tracks: parsed.data.songs,
+                link: parsed.data.link,
               });
 
               // Map songs using your template
@@ -100,8 +103,8 @@ const GlobalContextProvider: React.FC<GlobalContextProviderProps> = ({
 
               setSongs(mappedSongs);
               setLoading(false);
-            }
-
+            } else if (parsed.type === "download_path")
+              setDownloadPath(parsed.path);
             // --- 3. Handle Status Updates ---
             else if (parsed.type === "status") {
               console.log("Backend Status:", parsed.message);
@@ -124,6 +127,13 @@ const GlobalContextProvider: React.FC<GlobalContextProviderProps> = ({
         JSON.stringify({
           choice: 6,
           env_path: envFilePath,
+        }) + "\n",
+      );
+
+      // getting download path
+      await child.write(
+        JSON.stringify({
+          choice: 7,
         }) + "\n",
       );
     } catch (err) {
@@ -156,6 +166,7 @@ const GlobalContextProvider: React.FC<GlobalContextProviderProps> = ({
     playlist,
     setPlaylist,
     backendStatus,
+    downloadPath,
     childProc,
     setBackendStatus,
     startBackend,

@@ -2,7 +2,7 @@ import { useContext, useEffect } from "react";
 import { toast } from "react-toastify";
 import { Song } from "../types";
 
-import DownloadsContext from "../context/downloadsContext/DownloadsContext";
+import GlobalContext from "../context/globalContext/GlobalContext";
 
 const SongTile = ({
   index,
@@ -17,57 +17,39 @@ const SongTile = ({
     backgroundColor: "#232323",
   };
 
-  const context = useContext(DownloadsContext);
-  if (!context) throw new Error("No Downloads context");
+  const context = useContext(GlobalContext);
+  if (!context) throw new Error("No global context");
 
-  const { setDownloadPath, createDownload } = context;
+  const { backendStatus, childProc } = context;
 
   const handleDownload = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
-
-    let path = localStorage.getItem("downloadPath");
-    if (!path) path = await setDownloadPath(undefined);
-    console.log(`Download Path: ${path}`);
-
     try {
-      const res = await fetch("/api/download", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          song: { name, artists, images, id },
-          path,
-          qtype: "name",
-        }),
+      if (!childProc || !backendStatus) return;
+
+      await childProc.write(
+        JSON.stringify({
+          choice: 1,
+          name: name,
+          artist: artists,
+          quality: 320,
+        }) + "\n",
+      );
+
+      toast.info(`Downloading ${name}`, {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "dark",
       });
-
-      const data = await res.json();
-
-      if (data.success)
-        toast.success("Download complete", { style: toastStyle });
-      else {
-        if (data?.status == 409)
-          toast.error("Song already exists", { style: toastStyle });
-        else toast.error("Something went wrong...", { style: toastStyle });
-      }
-    } catch (error) {
-      console.error(`Something went wrong while downloading the song ${error}`);
+    } catch (err) {
+      console.error("Failed to open dialog:", err);
     }
   };
-
-  // useEffect(() => {
-  //   socket.on("start", (data) => {
-  //     if (data.id == id) {
-  //       console.log("download started ", data);
-  //       createDownload(images, name, id, "Song", false);
-  //     }
-  //   });
-
-  //   return () => {
-  //     socket.off("start");
-  //   };
-  // }, [socket, createDownload, id, images, name]);
 
   return (
     <div className="overflow-hidden font-semibold w-full h-20 grid grid-cols-[3fr_2fr_1fr_1fr] gap-x-8 items-center rounded-lg bg-[#242424] mt-3 px-6 py-4">

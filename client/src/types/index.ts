@@ -23,4 +23,5 @@ export interface playlist {
   owner: string;
   length: number;
   tracks: Song[];
+  link: string;
 }

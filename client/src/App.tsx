@@ -37,7 +37,14 @@ function App() {
             </GlobalContextProvider>
           }
         ></Route>
-        <Route path="downloads" element={<Downloads />} />
+        <Route
+          path="downloads"
+          element={
+            <GlobalContextProvider>
+              <Downloads />
+            </GlobalContextProvider>
+          }
+        />
         <Route
           path="login"
           element={

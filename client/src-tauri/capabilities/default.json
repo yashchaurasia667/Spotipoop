@@ -9,6 +9,8 @@
     "opener:default",
     "shell:default",
     "fs:default",
+    "dialog:default",
+    "dialog:allow-open",
     {
       "identifier": "fs:allow-exists",
       "comment": "Explicitly allow exists if default isn't enough"

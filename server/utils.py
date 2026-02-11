@@ -34,3 +34,31 @@ def load_config(custom_path):
 
 if __name__ == "__main__":
   print("running utils main")
+
+
+def update_env_variable(file_path, key, value):
+  if os.path.exists(file_path):
+    with open(file_path, 'r') as f:
+      lines = f.readlines()
+  else:
+    lines = []
+
+  key_found = False
+  new_lines = []
+
+  for line in lines:
+    # Check if the line starts with the key followed by an equals sign
+    if line.strip().startswith(f"{key}="):
+      new_lines.append(f"{key}={value}\n")
+      key_found = True
+    else:
+      new_lines.append(line)
+
+  if not key_found:
+    # Ensure there's a newline if the file wasn't empty
+    if lines and not lines[-1].endswith('\n'):
+      new_lines.append('\n')
+    new_lines.append(f"{key}={value}\n")
+
+  with open(file_path, 'w') as f:
+    f.writelines(new_lines)

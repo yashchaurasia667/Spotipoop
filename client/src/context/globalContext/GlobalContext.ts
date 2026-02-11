@@ -15,7 +15,7 @@ interface GlobalContextType {
   playlist: playlist | undefined;
   setPlaylist: (playlist: playlist | undefined) => void;
   backendStatus: boolean;
-  // setBackendStatus: (e: boolean) => void;
+  downloadPath: string;
   childProc: Child | undefined;
   startBackend: () => Promise<void>;
 }

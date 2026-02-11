@@ -28,8 +28,9 @@ def initUserCreation(client_id, client_secret):
     folder = os.path.dirname(ENV_PATH)
     if folder and not os.path.exists(folder):
       os.makedirs(folder, exist_ok=True)
-    with open(ENV_PATH, "w") as f:
-      f.write(content)
+
+    utils.update_env_variable(ENV_PATH, "VITE_SPOTIFY_ID", client_id)
+    utils.update_env_variable(ENV_PATH, "VITE_SPOTIFY_SECRET", client_secret)
   except Exception as e:
     print(f"Failed to write .env: {e}")
 
@@ -44,16 +45,12 @@ def update_env_path(new_path):
 
 
 def createEnv():
-  fp = open(ENV_PATH, "w")
-
   while True:
     user_id = input("CLIENT ID: ")
     user_secret = input("CLIENT SECRET: ")
     if user_id != "" and user_secret != "":
-      fp.write(f"VITE_SPOTIFY_ID={user_id}")
-      fp.write("\n")
-      fp.write(f"VITE_SPOTIFY_SECRET={user_secret}")
-      fp.close()
+      utils.update_env_variable(ENV_PATH, "VITE_SPOTIFY_ID", user_id)
+      utils.update_env_variable(ENV_PATH, "VITE_SPOTIFY_SECRET", user_secret)
       return {"id": user_id, "secret": user_secret}
 
 

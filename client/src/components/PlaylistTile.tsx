@@ -1,9 +1,7 @@
-import React, { useContext, useEffect } from "react";
-import { toast } from "react-toastify";
-
+import React, { useContext } from "react";
 import { FaArrowDown } from "react-icons/fa";
 
-import DownloadsContext from "../context/downloadsContext/DownloadsContext";
+import GlobalContext from "../context/globalContext/GlobalContext";
 import { playlist } from "../types";
 
 const PlaylistTile = ({
@@ -11,52 +9,32 @@ const PlaylistTile = ({
   name = "",
   owner = "",
   length = 0,
+  link = "",
 }: playlist) => {
-  const toastStyle = {
-    backgroundColor: "#232323",
+  // const toastStyle = {
+  //   backgroundColor: "#232323",
+  // };
+
+  const context = useContext(GlobalContext);
+  if (!context) throw new Error("No global context");
+  const { backendStatus, childProc } = context;
+
+  const handleDownload = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    try {
+      if (!backendStatus || !childProc) return;
+
+      childProc.write(
+        JSON.stringify({
+          choice: 5,
+          link: link,
+        }) + "\n",
+      );
+    } catch (error) {
+      console.error(error);
+    }
   };
 
-  const context = useContext(DownloadsContext);
-  if (!context) throw new Error("No Downloads context");
-
-  const { createDownload } = context;
-
-  // useEffect(() => {
-  //   socket.on("start", (data) => {
-  //     if (data.id == link) {
-  //       console.log("data: ", data);
-  //       createDownload(cover, name, link, "Playlist", false);
-  //     }
-  //   });
-
-  //   return () => {
-  //     socket.off("start");
-  //   };
-  // }, [socket, createDownload, cover, link, name]);
-
-  // const handleDownload = async (e: React.MouseEvent<HTMLButtonElement>) => {
-  //   e.preventDefault();
-  //   const path = localStorage.getItem("downloadPath");
-  //   if (path) {
-  //     const res = await fetch("api/download", {
-  //       method: "POST",
-  //       headers: {
-  //         "Content-Type": "application/json",
-  //       },
-  //       body: JSON.stringify({
-  //         // song: link,
-  //         path,
-  //         qtype: "playlist",
-  //       }),
-  //     });
-  //     const data = await res.json();
-  //     if (data.success)
-  //       toast.success("Playlist downloaded", {
-  //         style: toastStyle,
-  //       });
-  //     else toast.error("Could not download playlist...", { style: toastStyle });
-  //   }
-  // };
   return (
     <div className="flex items-center justify-between bg-[#282828] font-semibold rounded-xl mx-auto mt-3 px-6 py-4">
       <div className="flex items-center gap-x-8 h-full">
@@ -73,7 +51,7 @@ const PlaylistTile = ({
       </div>
       <button
         className="text-[#121212] bg-purple-500 hover:bg-purple-400 hover:scale-110 rounded-[50%] p-6 transition-all cursor-pointer"
-        // onClick={handleDownload}
+        onClick={handleDownload}
       >
         <FaArrowDown size={35} />
       </button>

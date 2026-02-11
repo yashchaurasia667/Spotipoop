@@ -65,7 +65,7 @@ def getPlaylistFromId(playlist_id: str):
       sp = getSpotifyClient()
 
     playlist = sp.playlist(playlist_id, market="US")
-    data = {"name": playlist['name'], "owner": playlist['owner']['display_name'], "thumbnail": playlist['images'][0]['url'] if playlist['images'] else None, "total_tracks": playlist['tracks']['total'], "songs": []}
+    data = {"name": playlist['name'], "owner": playlist['owner']['display_name'], "thumbnail": playlist['images'][0]['url'] if playlist['images'] else None, "total_tracks": playlist['tracks']['total'], "songs": [], "link": f"https://open.spotify.com/playlist/{playlist_id}"}
 
     results = playlist['tracks']
     items = results['items']
@@ -91,7 +91,7 @@ def getAlbumFromId(album_id: str):
       sp = getSpotifyClient()
 
     album = sp.album(album_id)
-    data = {"name": album['name'], "owner": album['artists'][0]['name'], "thumbnail": album['images'][0]['url'] if album['images'] else None, "total_tracks": album['tracks']['total'], "songs": []}
+    data = {"name": album['name'], "owner": album['artists'][0]['name'], "thumbnail": album['images'][0]['url'] if album['images'] else None, "total_tracks": album['tracks']['total'], "songs": [], "link": f"https://open.spotify.com/album/{album_id}"}
 
     # Album tracks don't have the 'album' object inside them,
     # so we inject it for format_track to work correctly.

@@ -41,7 +41,7 @@ const Search: React.FC = () => {
       if (!content.includes("VITE_SPOTIFY_ID") || !content.includes("VITE_SPOTIFY_SECRET")) {
         navigate("/login");
       } else {
-        console.log(content)
+        // console.log(content)
         toast.success("Connected to Spotify", {
           style: { backgroundColor: "#232323" },
         });
