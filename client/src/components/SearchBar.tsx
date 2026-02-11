@@ -38,7 +38,7 @@ const SearchBar = () => {
       const data = {
         choice: choice,
         query: query,
-        link: query, 
+        link: query,
       };
       console.log(JSON.stringify(data));
 
@@ -46,38 +46,6 @@ const SearchBar = () => {
     } catch (error) {
       console.error("error occured while searching ", error);
     }
-
-    //   try {
-    // const res = await fetch("/api", {
-    //   method: "POST",
-    //   headers: {
-    //     "Content-Type": "application/json",
-    //   },
-    //   body: JSON.stringify({ query, qtype }),
-    // });
-
-    // const data = await res.json();
-    // if (data.success) {
-    //   if (qtype == "Playlist") {
-    //     setPlaylist({
-    //       cover: data.cover,
-    //       name: data.name,
-    //       link: query,
-    //     });
-    //   }
-    // else {
-    //   setPlaylist((prev) => ({
-    //     ...prev,
-    //     name: "",
-    //   }));
-    // }
-    //       setSongs(data.songs);
-    //     } else if (!data.success) throw new Error("Check the playlist link");
-    //   } catch (error) {
-    //     console.error(`Error fetching songs: ${error}`);
-    //   } finally {
-    //     setLoading(false);
-    //   }
   };
 
   return (

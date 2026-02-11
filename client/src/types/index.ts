@@ -1,11 +1,11 @@
 export type Song = {
-  album: string;
-  artists: string;
-  duration: number;
-  images: string;
-  index: number;
-  name: string;
   id: string;
+  name: string;
+  artists: string;
+  images: string;
+  album: string;
+  duration: string;
+  index: number;
 };
 
 export interface downloads {
@@ -20,5 +20,7 @@ export interface downloads {
 export interface playlist {
   cover: string;
   name: string;
-  link: string;
+  owner: string;
+  length: number;
+  tracks: Song[];
 }

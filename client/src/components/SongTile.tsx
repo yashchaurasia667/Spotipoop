@@ -17,20 +17,10 @@ const SongTile = ({
     backgroundColor: "#232323",
   };
 
-  // const socket = io("http://localhost:5000", {
-  //   transports: ["websocket", "polling"],
-  // });
-
   const context = useContext(DownloadsContext);
   if (!context) throw new Error("No Downloads context");
 
   const { setDownloadPath, createDownload } = context;
-
-  const fromMilliseconds = (ms: number) => {
-    const min = Math.floor(ms / 60000);
-    const sec = ((ms % 60000) / 1000).toFixed(0);
-    return `${min}:${sec.padStart(2, "0")}`;
-  };
 
   const handleDownload = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
@@ -97,7 +87,7 @@ const SongTile = ({
         </div>
       </div>
       <div className="album truncate">{album}</div>
-      <div>{fromMilliseconds(duration)}</div>
+      <div>{duration}</div>
       <button
         className="text-[#121212] bg-purple-500 hover:bg-purple-400 hover:scale-105 rounded-full px-4 py-2 transition-all"
         onClick={(e) => handleDownload(e)}
