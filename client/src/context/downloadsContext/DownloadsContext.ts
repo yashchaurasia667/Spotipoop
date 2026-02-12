@@ -8,17 +8,17 @@ interface DownloadsContext {
   downloading: downloads[];
   setDownloading: (download: downloads[]) => void;
   initDownloads: () => void;
-  setDownloadPath: (e: React.FormEvent | undefined) => Promise<string>;
   createDownload: (
     cover: string,
     name: string,
     id: string,
     type: "Song" | "Playlist",
-    complete: boolean
+    complete: boolean,
+    path: string,
   ) => void;
 }
 
 const DownloadsContext = React.createContext(
-  <DownloadsContext | undefined>undefined
+  <DownloadsContext | undefined>undefined,
 );
 export default DownloadsContext;

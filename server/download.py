@@ -107,18 +107,18 @@ def downloadAudio(track, quality):
         if os.path.exists(tmp_cover):
           os.remove(tmp_cover)
 
-        return f"Success! Downloaded using option {i+1}."
+        return True
 
       except Exception as e:
         print(f"Option {i+1} failed. Reason: {e}")
         print("Trying next link...\n")
         continue
 
-  return "Error: All download attempts failed."
+  return False
 
 
 if __name__ == "__main__":
-  print("runnign download main")
+  print("running download main")
 
   user_details = user.getUserDetails()
   if (user_details["id"] == "" or user_details["secret"] == ""):

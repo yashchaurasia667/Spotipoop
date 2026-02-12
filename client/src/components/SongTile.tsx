@@ -1,8 +1,9 @@
-import { useContext, useEffect } from "react";
+import { useContext } from "react";
 import { toast } from "react-toastify";
 import { Song } from "../types";
 
 import GlobalContext from "../context/globalContext/GlobalContext";
+import DownloadsContext from "../context/downloadsContext/DownloadsContext";
 
 const SongTile = ({
   index,
@@ -13,14 +14,14 @@ const SongTile = ({
   duration,
   id,
 }: Song) => {
-  const toastStyle = {
-    backgroundColor: "#232323",
-  };
+  const globalContext = useContext(GlobalContext);
+  if (!globalContext) throw new Error("No global Context");
 
-  const context = useContext(GlobalContext);
-  if (!context) throw new Error("No global context");
+  const downloadContext = useContext(DownloadsContext);
+  if (!downloadContext) throw new Error("No download context");
 
-  const { backendStatus, childProc } = context;
+  const { backendStatus, childProc, downloadPath } = globalContext;
+  const { createDownload } = downloadContext;
 
   const handleDownload = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
@@ -35,6 +36,7 @@ const SongTile = ({
           quality: 320,
         }) + "\n",
       );
+      createDownload(images, name, id, "Song", true, downloadPath);
 
       toast.info(`Downloading ${name}`, {
         position: "top-right",
@@ -71,7 +73,7 @@ const SongTile = ({
       <div className="album truncate">{album}</div>
       <div>{duration}</div>
       <button
-        className="text-[#121212] bg-purple-500 hover:bg-purple-400 hover:scale-105 rounded-full px-4 py-2 transition-all"
+        className="text-[#121212] bg-purple-500 hover:bg-purple-400 hover:scale-105 rounded-full px-4 py-2 transition-all cursor-pointer"
         onClick={(e) => handleDownload(e)}
       >
         Download

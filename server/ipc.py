@@ -28,8 +28,11 @@ def main():
       # Choice 1: Download single track
       elif command["choice"] == 1:
         res = spotify.searchSpotify(f"{command['name']} {command['artist']}")
-        download.downloadAudio(res[0], command.get("quality", 320))
-        print(json.dumps({"type": "status", "message": f"Finished downloading {command['name']}"}), flush=True)
+        dw = download.downloadAudio(res[0], command.get("quality", 320))
+        if dw:
+          print(json.dumps({"type": "download", "message": f"{res["id"]}"}), flush=True)
+        else:
+          print(json.dumps({"type": "error", "message": f"Failed downloading {command['name']}"}), flush=True)
 
       # Choice 2: Get playlist/album details
       elif command["choice"] == 2:
@@ -44,7 +47,7 @@ def main():
       elif command["choice"] == 3:
         download.DOWNLOAD_PATH = command["path"]
         utils.update_env_variable(user.ENV_PATH, "VITE_DOWNLOAD_PATH", command["path"])
-        print(json.dumps({"type": "status", "message": f"path updated to: {download.DOWNLOAD_PATH}"}), flush=True)
+        print(json.dumps({"type": "download_path", "message": f"path updated to: {download.DOWNLOAD_PATH}"}), flush=True)
 
       # Choice 4: Search for a track
       elif command["choice"] == 4:

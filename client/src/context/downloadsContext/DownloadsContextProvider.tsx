@@ -19,34 +19,17 @@ const DownloadsContextProvider: React.FC<DownloadsContextProviderProps> = ({
     else setDownloads([]);
   };
 
-  const setDownloadPath = async (e: React.FormEvent | undefined) => {
-    if (e) e.preventDefault();
-    try {
-      const res = await window.api.openDownloadDialog();
-      if (res && !res?.canceled) {
-        const path = res.filePaths[0];
-        localStorage.setItem("downloadPath", path);
-        console.log(`Download path set to: ${path}`);
-        return path;
-      } else console.log("Operation canceled");
-    } catch (error) {
-      console.error(`Something went wrong opening file dialog: ${error}`);
-    }
-    return "";
-  };
-
   const createDownload = (
     cover: string,
     name: string,
     id: string,
     type: "Song" | "Playlist",
     complete: boolean,
+    path: string,
   ) => {
-    const path = localStorage.getItem("downloadPath");
-
     const newDownload = {
       title: name,
-      downloadPath: path || "c:/",
+      downloadPath: path,
       coverPath: cover,
       id: id,
       type: type,
@@ -62,7 +45,6 @@ const DownloadsContextProvider: React.FC<DownloadsContextProviderProps> = ({
     downloading,
     initDownloads,
     setDownloading,
-    setDownloadPath,
     createDownload,
   };
 

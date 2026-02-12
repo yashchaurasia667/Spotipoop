@@ -1,5 +1,4 @@
 import React, { useContext, useEffect, useState } from "react";
-import { io } from "socket.io-client";
 
 import { FaFolder } from "react-icons/fa";
 import { RxCross2 } from "react-icons/rx";
@@ -7,15 +6,6 @@ import { RxCross2 } from "react-icons/rx";
 import DownloadsContext from "../context/downloadsContext/DownloadsContext";
 
 import { downloads } from "../types/index";
-
-// interface props {
-//   title: string;
-//   type: "Song" | "Playlist";
-//   downloadPath: string;
-//   coverPath: string;
-//   complete: boolean;
-// }
-
 interface style {
   display: "grid";
   gridTemplateColumns: string;
@@ -32,11 +22,6 @@ const DownloadTile = ({
   if (!context) throw new Error("No Downloads context");
 
   const { initDownloads } = context;
-
-  // const socket = io("http://localhost:5000", {
-  //   transports: ["websocket", "polling"],
-  // });
-
   const [downloadComplete, setDownloadComplete] = useState<boolean>(complete);
   const [progress, setProgress] = useState<style>({
     display: "grid",
@@ -61,7 +46,7 @@ const DownloadTile = ({
       console.log(dwl);
       const newDownloads = dwl.filter(
         (download: downloads) =>
-          !(download?.title == title && download?.coverPath == coverPath)
+          !(download?.title == title && download?.coverPath == coverPath),
       );
       localStorage.setItem("downloads", JSON.stringify(newDownloads));
     }
@@ -69,21 +54,6 @@ const DownloadTile = ({
 
     console.log("download removed");
   };
-
-  // useEffect(() => {
-  //   socket.on("progress", (data) => {
-  //     console.log(data);
-  //     setProgress({
-  //       display: "grid",
-  //       gridTemplateColumns: `${data.progress}fr ${10 - data.progress}fr`,
-  //     });
-  //     if (data.progress == 10) setDownloadComplete(true);
-  //   });
-
-  //   return () => {
-  //     socket.off("progress");
-  //   };
-  // }, [socket]);
 
   return (
     <div className="h-[100px] rounded-lg bg-[#242424] px-6 py-4 grid grid-cols-[9fr_1fr] items-center">

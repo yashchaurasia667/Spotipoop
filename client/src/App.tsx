@@ -24,35 +24,28 @@ function App() {
       <Route
         path="/"
         element={
-          <DownloadsContextProvider>
+          <GlobalContextProvider>
             <MainLayout />
-          </DownloadsContextProvider>
+          </GlobalContextProvider>
         }
       >
         <Route
           index
           element={
-            <GlobalContextProvider>
+            <DownloadsContextProvider>
               <Search />
-            </GlobalContextProvider>
+            </DownloadsContextProvider>
           }
         ></Route>
         <Route
           path="downloads"
           element={
-            <GlobalContextProvider>
+            <DownloadsContextProvider>
               <Downloads />
-            </GlobalContextProvider>
+            </DownloadsContextProvider>
           }
         />
-        <Route
-          path="login"
-          element={
-            <GlobalContextProvider>
-              <Login />
-            </GlobalContextProvider>
-          }
-        />
+        <Route path="login" element={<Login />} />
         <Route path="help" element={<Help />} />
       </Route>,
     ),
