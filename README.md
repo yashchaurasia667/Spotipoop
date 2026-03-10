@@ -1,6 +1,7 @@
 # SPOTIPOOP
 
 Introducing spotipoop the ultimate non premium commitment because I can't keep up with the fucking prices. Another company raised their prices again? Removed features? Too bad! Just download your whole library offline with Spotipoop.
+THEY EVEN FUCKING RESTRICTED THE WEB API TO ONLY PREMIUM USERS!!! FUCK YOU SPOTIFYYY!! I WILL USE A FUCKING ALTERNATIVE!!
 
 ## How it works?
 
