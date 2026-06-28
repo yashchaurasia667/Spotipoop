@@ -10,7 +10,6 @@ import MainLayout from "./Layouts/MainLayout";
 import Search from "./Pages/Search";
 
 import Downloads from "./components/Downloads";
-import Login from "./components/Login";
 import Help from "./components/Help";
 
 import GlobalContextProvider from "./context/globalContext/GlobalContextProvider";
@@ -45,7 +44,6 @@ function App() {
             </DownloadsContextProvider>
           }
         />
-        <Route path="login" element={<Login />} />
         <Route path="help" element={<Help />} />
       </Route>,
     ),

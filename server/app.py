@@ -1,17 +1,9 @@
-import user
 import utils
 import spotify
 import download
 import os
 
 if __name__ == "__main__":
-  # 0. Initial Credential Check
-  user_details = user.getUserDetails()
-  if user_details["id"] == "" or user_details["secret"] == "":
-    user_details = user.createEnv()
-
-  # Ensure spotify client is ready
-  # spotify.initialize_spotify()
 
   while True:
     print("\n" + "=" * 30)
@@ -22,7 +14,6 @@ if __name__ == "__main__":
     print("3. Set Base Download Path")
     print("4. Search for a Track")
     print("5. Download Entire Playlist/Album")
-    print("0. Reset Credentials")
     print("'exit' to quit")
 
     user_input = input("\nSelect an option: ").strip().lower()
@@ -37,10 +28,7 @@ if __name__ == "__main__":
       print("Invalid input. Please enter a number or 'exit'.")
       continue
 
-    if choice == 0:
-      user_details = user.createEnv()
-
-    elif choice == 1:
+    if choice == 1:
       name = input("Track Name: ")
       artist = input("Artist: ")
       quality = input("Quality (e.g., 320, 128): ")

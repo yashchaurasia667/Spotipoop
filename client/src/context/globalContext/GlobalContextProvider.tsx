@@ -53,6 +53,12 @@ const GlobalContextProvider: React.FC<GlobalContextProviderProps> = ({
 
             // --- 1. Handle Collection Details (Playlist/Album Links) ---
             if (parsed.type === "search_playlist") {
+              if (parsed.data.error) {
+                console.error("Error fetching playlist:", parsed.data.error);
+                setLoading(false);
+                return;
+              }
+
               // Update Playlist Metadata
               setPlaylist({
                 name: parsed.data.name,
@@ -63,8 +69,14 @@ const GlobalContextProvider: React.FC<GlobalContextProviderProps> = ({
                 link: parsed.data.link,
               });
 
+              if (!parsed.data.songs || parsed.data.songs.length === 0) {
+                console.warn("No songs found in collection");
+                setSongs([]);
+                setLoading(false);
+                return;
+              }
+
               // Map songs using your template
-              console.log(parsed.data.songs[0].length);
               const mappedSongs = parsed.data.songs.map(
                 (track: any, idx: number) => ({
                   album: track.album || parsed.data.name,

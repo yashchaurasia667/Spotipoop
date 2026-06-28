@@ -1,16 +1,28 @@
 import sys
 import os
 import json
-import user
+import platform
+from pathlib import Path
 import utils
 import spotify
 import download
 
+ENV_PATH = ".env"
+
+def get_default_download_path():
+  home = str(Path.home())
+  if platform.system() == "Windows":
+    return os.path.join(home, "Documents", "spotipoop-downloads")
+  else:
+    return os.path.join(home, "spotipoop-downloads")
 
 def main():
-  utils.load_config(user.ENV_PATH)
+  global ENV_PATH
+  utils.load_config(ENV_PATH)
   if os.getenv("VITE_DOWNLOAD_PATH"):
     download.DOWNLOAD_PATH = os.getenv("VITE_DOWNLOAD_PATH")
+  else:
+    download.DOWNLOAD_PATH = get_default_download_path()
 
   while True:
     try:
@@ -20,13 +32,10 @@ def main():
 
       command = json.loads(json_str.strip())
 
-      # Choice 0: Reset credentials
-      if command["choice"] == 0:
-        user.initUserCreation(command["id"], command["secret"])
-        print(json.dumps({"type": "status", "message": "Credentials set"}), flush=True)
-
       # Choice 1: Download single track
-      elif command["choice"] == 1:
+      if command["choice"] == 1:
+        sys.stderr.write(f"DEBUG: Processing download for {command['name']}\n")
+        sys.stderr.flush()
         res = spotify.searchSpotify(f"{command['name']} {command['artist']}")
         dw = download.downloadAudio(res[0], command.get("quality", 320))
         if dw:
@@ -38,7 +47,7 @@ def main():
       elif command["choice"] == 2:
         collection_id, collection_type = utils.extractId(command["link"])
         if collection_id:
-          collection = spotify.getPlaylistFromId(collection_id) if collection_type == "playlist" else spotify.getAlbumFromId(collection_id)
+          collection = spotify.scrape_spotify_collection(collection_id, collection_type)
           print(json.dumps({"type": "search_playlist", "data": collection}), flush=True)
         else:
           print(json.dumps({"type": "error", "message": "Invalid link."}), flush=True)
@@ -46,18 +55,20 @@ def main():
       # Choice 3: Update download path
       elif command["choice"] == 3:
         download.DOWNLOAD_PATH = command["path"]
-        utils.update_env_variable(user.ENV_PATH, "VITE_DOWNLOAD_PATH", command["path"])
+        utils.update_env_variable(ENV_PATH, "VITE_DOWNLOAD_PATH", command["path"])
         print(json.dumps({"type": "download_path", "message": f"path updated to: {download.DOWNLOAD_PATH}"}), flush=True)
 
       # Choice 4: Search for a track
       elif command["choice"] == 4:
+        sys.stderr.write(f"DEBUG: Processing search for {command['query']}\n")
+        sys.stderr.flush()
         tracks = spotify.searchSpotify(command["query"])
         print(json.dumps({"type": "search_songs", "data": tracks}), flush=True)
 
       # Choice 5: Download album/playlist
       elif command["choice"] == 5:
         c_id, c_type = utils.extractId(command["link"])
-        collection = spotify.getPlaylistFromId(c_id) if c_type == "playlist" else spotify.getAlbumFromId(c_id)
+        collection = spotify.scrape_spotify_collection(c_id, c_type)
 
         if collection and "songs" in collection:
           original_base = download.DOWNLOAD_PATH
@@ -79,14 +90,14 @@ def main():
 
       # Choice 6: Update env path
       elif command["choice"] == 6:
-        user.ENV_PATH = command["env_path"]
-        if not user.ENV_PATH.endswith(".env"):
-          user.ENV_PATH = os.path.join(user.ENV_PATH, ".env")
+        ENV_PATH = command["env_path"]
+        if not ENV_PATH.endswith(".env"):
+          ENV_PATH = os.path.join(ENV_PATH, ".env")
 
-        utils.load_config(user.ENV_PATH)
+        utils.load_config(ENV_PATH)
         if os.getenv("VITE_DOWNLOAD_PATH"):
           download.DOWNLOAD_PATH = os.getenv("VITE_DOWNLOAD_PATH")
-        print(json.dumps({"type": "status", "message": f"Env path set to {user.ENV_PATH}"}), flush=True)
+        print(json.dumps({"type": "status", "message": f"Env path set to {ENV_PATH}"}), flush=True)
 
       # Choice 7: Get current download path
       elif command["choice"] == 7:

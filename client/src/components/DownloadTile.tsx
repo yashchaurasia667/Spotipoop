@@ -1,4 +1,5 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useState } from "react";
+import { openPath as openNativePath } from "@tauri-apps/plugin-opener";
 
 import { FaFolder } from "react-icons/fa";
 import { RxCross2 } from "react-icons/rx";
@@ -22,8 +23,8 @@ const DownloadTile = ({
   if (!context) throw new Error("No Downloads context");
 
   const { initDownloads } = context;
-  const [downloadComplete, setDownloadComplete] = useState<boolean>(complete);
-  const [progress, setProgress] = useState<style>({
+  const [downloadComplete] = useState<boolean>(complete);
+  const [progress] = useState<style>({
     display: "grid",
     gridTemplateColumns: `0fr 10fr`,
   });
@@ -31,8 +32,7 @@ const DownloadTile = ({
   const openPath = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const res = window.api.openPath(downloadPath);
-      console.log(res);
+      await openNativePath(downloadPath);
     } catch (error) {
       console.error(`Something went wrong: ${error}`);
     }

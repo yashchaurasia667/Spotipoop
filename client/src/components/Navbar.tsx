@@ -21,12 +21,7 @@ const Navbar = () => {
         {isHovered ? <p className="text-xl">Downloads</p> : ""}
       </div>
     ),
-    login: (
-      <div className="flex gap-x-4 items-center">
-        <CgProfile size={25} className="" />
-        {isHovered ? <p className="text-xl">Login</p> : ""}
-      </div>
-    ),
+
     help: (
       <div className="flex gap-x-4 items-center">
         <FaQuestion size={25} className="" />
@@ -58,9 +53,7 @@ const Navbar = () => {
         <NavLink to={"/downloads"} className={"navlink"}>
           {pages.downloads}
         </NavLink>
-        <NavLink to={"/login"} className={"navlink"}>
-          {pages.login}
-        </NavLink>
+
         <NavLink to={"/help"} className={"navlink"}>
           {pages.help}
         </NavLink>

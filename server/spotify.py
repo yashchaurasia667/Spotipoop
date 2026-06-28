@@ -1,23 +1,18 @@
-from unittest import result
-import user
-import spotipy
-from spotipy.oauth2 import SpotifyClientCredentials
+import requests
+from bs4 import BeautifulSoup
+from ytmusicapi import YTMusic
 
 # Initialize the client ONCE at the start of the script execution
-sp = None
+yt = None
 
-def getSpotifyClient():
+def getYTMusicClient():
   """
-    Retrieves credentials and returns a valid, authorized Spotipy client.
+    Retrieves and returns a valid YTMusic client.
     """
-  user_details = user.getUserDetails()
-
-  # Trigger user creation if credentials are missing
-  if not user_details.get("id") or not user_details.get("secret"):
-    user_details = user.createEnv()
-
-  auth_manager = SpotifyClientCredentials(client_id=user_details["id"], client_secret=user_details["secret"])
-  return spotipy.Spotify(auth_manager=auth_manager)
+  global yt
+  if not yt:
+    yt = YTMusic()
+  return yt
 
 
 def format_track(track):
@@ -27,96 +22,101 @@ def format_track(track):
   if not track:
     return None
 
-  duration_ms = track.get('duration_ms', 0)
+  duration_ms = track.get('duration_seconds', 0) * 1000 if track.get('duration_seconds') else 0
+  if duration_ms == 0 and track.get('duration'):
+    # Sometimes duration is "M:SS"
+    parts = track['duration'].split(":")
+    if len(parts) == 2:
+      duration_ms = (int(parts[0]) * 60 + int(parts[1])) * 1000
+    elif len(parts) == 3:
+      duration_ms = (int(parts[0]) * 3600 + int(parts[1]) * 60 + int(parts[2])) * 1000
+
   minutes = duration_ms // 60000
   seconds = (duration_ms % 60000) // 1000
   length = f"{minutes}:{seconds:02d}"
 
   # Safely navigate nested dictionaries using .get()
-  album_data = track.get('album', {})
-  images = album_data.get('images', [])
-  thumbnail = images[0]['url'] if images else None
+  thumbnails = track.get('thumbnails', [])
+  thumbnail = thumbnails[-1]['url'] if thumbnails else None
 
-  return {"id": track.get('id'), "name": track.get('name'), "artist": track['artists'][0]['name'] if track.get('artists') else "", "cover": thumbnail, "album": album_data.get('name', "Unknown Album"), "length": length, "explicit": track.get("explicit", False)}
+  album_data = track.get('album', {})
+  if album_data:
+      album_name = album_data.get('name', "Unknown Album")
+  else:
+      album_name = "Unknown Album"
+
+  artists = track.get('artists', [])
+  artist_name = artists[0]['name'] if artists else ""
+
+  return {"id": track.get('videoId'), "name": track.get('title'), "artist": artist_name, "cover": thumbnail, "album": album_name, "length": length, "explicit": track.get("isExplicit", False)}
 
 
 def searchSpotify(query: str):
   """
-    Searches for tracks and returns a formatted list.
+    Searches for tracks and returns a formatted list using YTMusic.
     """
-  global sp
   try:
-    if not sp:
-      sp = getSpotifyClient()
-
-    results = sp.search(q=query, limit=10, type="track")
-    return [format_track(item) for item in results['tracks']['items']]
+    client = getYTMusicClient()
+    results = client.search(query=query, filter="songs", limit=10)
+    return [format_track(item) for item in results]
   except Exception as e:
     return {"error": str(e)}
 
 
-def getPlaylistFromId(playlist_id: str):
+def scrape_spotify_collection(collection_id: str, collection_type: str):
   """
-    Fetches all tracks from a playlist using pagination.
-    """
-  global sp
-  try:
-    if not sp:
-      sp = getSpotifyClient()
-
-    playlist = sp.playlist(playlist_id, market="US")
-    data = {"name": playlist['name'], "owner": playlist['owner']['display_name'], "thumbnail": playlist['images'][0]['url'] if playlist['images'] else None, "total_tracks": playlist['tracks']['total'], "songs": [], "link": f"https://open.spotify.com/playlist/{playlist_id}"}
-
-    results = playlist['tracks']
-    items = results['items']
-
-    # Paginate to get all tracks
-    while results['next']:
-      results = sp.next(results)
-      items.extend(results['items'])
-
-    data["songs"] = [format_track(item['track']) for item in items if item.get('track')]
-    return data
-  except Exception as e:
-    return {"error": str(e)}
-
-
-def getAlbumFromId(album_id: str):
+  Scrapes a Spotify playlist or album and returns a formatted collection dictionary.
   """
-    Fetches all tracks from an album.
-    """
-  global sp
+  url = f"https://open.spotify.com/{collection_type}/{collection_id}"
   try:
-    if not sp:
-      sp = getSpotifyClient()
-
-    album = sp.album(album_id)
-    data = {"name": album['name'], "owner": album['artists'][0]['name'], "thumbnail": album['images'][0]['url'] if album['images'] else None, "total_tracks": album['tracks']['total'], "songs": [], "link": f"https://open.spotify.com/album/{album_id}"}
-
-    # Album tracks don't have the 'album' object inside them,
-    # so we inject it for format_track to work correctly.
-    for item in album['tracks']['items']:
-      item['album'] = {'name': album['name'], 'images': album['images']}
-      data["songs"].append(format_track(item))
-
-    return data
+    html = requests.get(url, headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}).text
+    soup = BeautifulSoup(html, 'html.parser')
+    
+    title = soup.find('h1')
+    collection_name = title.text.strip() if title else "Unknown Collection"
+    
+    img = soup.find('img')
+    thumbnail = img['src'] if img else None
+    
+    tracks = []
+    rows = soup.find_all('div', {'data-testid': 'track-row'})
+    
+    for row in rows:
+        title_elem = row.find('p', {'data-encore-id': 'listRowTitle'})
+        if not title_elem:
+            title_elem = row.find('div', class_=lambda c: c and 'title' in c.lower())
+            
+        song_title = title_elem.text.strip() if title_elem else "Unknown"
+        
+        artist_links = row.find_all('a', href=lambda href: href and '/artist/' in href)
+        artists = [a.text.strip() for a in artist_links] if artist_links else []
+        artist = ", ".join(artists)
+        
+        tracks.append({
+            "name": song_title,
+            "artist": artist,
+            "id": f"{song_title} {artist}",
+            "cover": thumbnail,
+            "album": collection_name,
+            "length": "0:00",
+            "explicit": False
+        })
+        
+    return {
+        "name": collection_name,
+        "owner": "Spotify User",
+        "thumbnail": thumbnail,
+        "total_tracks": len(tracks),
+        "songs": tracks,
+        "link": url
+    }
   except Exception as e:
     return {"error": str(e)}
 
 
 if __name__ == "__main__":
-  print("running spotify main")
-
-  # Test with a known public playlist
-  # test_id = "37i9dQZF1DXaohnPXGkLv6"
-  # result = getPlaylistFromId(test_id)
-  # result = getAlbumFromId("5WulAOx9ilWy1h8UGZ1gkI")
-
-  # if "error" in result:
-  #   print(f"Error occurred: {result['error']}")
-  # else:
-  #   print(f"Successfully fetched: {result['name']} ({len(result['songs'])} songs)")
+  print("running ytmusic main")
 
   tracks = searchSpotify("obsessed")
   for i, t in enumerate(tracks):
-    print(f"{i+1}. {t["name"]}, {t["artist"]}")
+    print(f"{i+1}. {t['name']}, {t['artist']}")
