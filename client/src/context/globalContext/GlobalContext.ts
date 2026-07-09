@@ -1,6 +1,6 @@
 import React from "react";
 
-import { Song, playlist } from "../../types";
+import { Song, playlist, NativePlaylist } from "../../types";
 import { Child } from "@tauri-apps/plugin-shell";
 
 interface GlobalContextType {
@@ -30,6 +30,13 @@ interface GlobalContextType {
   playNextInQueue: () => void;
   isQueueVisible: boolean;
   setIsQueueVisible: (visible: boolean) => void;
+  nativePlaylists: NativePlaylist[];
+  createPlaylist: (name: string, description: string, cover: string) => Promise<void>;
+  updatePlaylist: (id: string, updates: Partial<NativePlaylist>) => Promise<void>;
+  deletePlaylist: (id: string) => Promise<void>;
+  addSongToPlaylist: (playlistId: string, song: Song) => Promise<void>;
+  removeSongFromPlaylist: (playlistId: string, songIdx: number) => Promise<void>;
+  reorderPlaylist: (playlistId: string, startIndex: number, endIndex: number) => Promise<void>;
 }
 const GlobalContext = React.createContext(
   <GlobalContextType | undefined>undefined,

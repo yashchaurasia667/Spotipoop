@@ -24,14 +24,18 @@ def main():
   else:
     download.DOWNLOAD_PATH = get_default_download_path()
 
-  while True:
+  import concurrent.futures
+  import threading
+  
+  print_lock = threading.Lock()
+  
+  def safe_print(data):
+    with print_lock:
+      print(json.dumps(data), flush=True)
+
+  def process_command(command):
+    global ENV_PATH
     try:
-      json_str = sys.stdin.readline()
-      if not json_str:
-        break
-
-      command = json.loads(json_str.strip())
-
       # Choice 1: Download single track
       if command["choice"] == 1:
         sys.stderr.write(f"DEBUG: Processing download for {command['name']}\n")
@@ -39,31 +43,31 @@ def main():
         res = spotify.searchSpotify(f"{command['name']} {command['artist']}")
         dw = download.downloadAudio(res[0], command.get("quality", 320))
         if dw:
-          print(json.dumps({"type": "download", "message": f"{res["id"]}"}), flush=True)
+          safe_print({"type": "download", "message": f"{res[0].get('id', '')}"})
         else:
-          print(json.dumps({"type": "error", "message": f"Failed downloading {command['name']}"}), flush=True)
+          safe_print({"type": "error", "message": f"Failed downloading {command['name']}"})
 
       # Choice 2: Get playlist/album details
       elif command["choice"] == 2:
         collection_id, collection_type = utils.extractId(command["link"])
         if collection_id:
           collection = spotify.scrape_spotify_collection(collection_id, collection_type)
-          print(json.dumps({"type": "search_playlist", "data": collection}), flush=True)
+          safe_print({"type": "search_playlist", "data": collection})
         else:
-          print(json.dumps({"type": "error", "message": "Invalid link."}), flush=True)
+          safe_print({"type": "error", "message": "Invalid link."})
 
       # Choice 3: Update download path
       elif command["choice"] == 3:
         download.DOWNLOAD_PATH = command["path"]
         utils.update_env_variable(ENV_PATH, "VITE_DOWNLOAD_PATH", command["path"])
-        print(json.dumps({"type": "download_path", "message": f"path updated to: {download.DOWNLOAD_PATH}"}), flush=True)
+        safe_print({"type": "download_path", "message": f"path updated to: {download.DOWNLOAD_PATH}"})
 
       # Choice 4: Search for a track
       elif command["choice"] == 4:
         sys.stderr.write(f"DEBUG: Processing search for {command['query']}\n")
         sys.stderr.flush()
         tracks = spotify.searchSpotify(command["query"])
-        print(json.dumps({"type": "search_songs", "data": tracks}), flush=True)
+        safe_print({"type": "search_songs", "data": tracks})
 
       # Choice 5: Download album/playlist
       elif command["choice"] == 5:
@@ -75,18 +79,16 @@ def main():
           folder_name = utils.clean_filename(collection["name"])
           download.DOWNLOAD_PATH = os.path.join(original_base, folder_name)
 
-          # FIXED: Wrap bulk download status in JSON
-          print(json.dumps({"type": "status", "message": f"Starting bulk download to: {download.DOWNLOAD_PATH}"}), flush=True)
+          safe_print({"type": "status", "message": f"Starting bulk download to: {download.DOWNLOAD_PATH}"})
 
           for i, track in enumerate(collection["songs"]):
-            # FIXED: Wrap progress in JSON
             msg = f"[{i+1}/{len(collection['songs'])}] Downloading: {track['name']}"
-            print(json.dumps({"type": "status", "message": msg}), flush=True)
+            safe_print({"type": "status", "message": msg})
             download.downloadAudio(track, command.get("quality", 320))
 
           download.DOWNLOAD_PATH = original_base
         else:
-          print(json.dumps({"type": "error", "message": "Failed to load collection."}), flush=True)
+          safe_print({"type": "error", "message": "Failed to load collection."})
 
       # Choice 6: Update env path
       elif command["choice"] == 6:
@@ -97,30 +99,60 @@ def main():
         utils.load_config(ENV_PATH)
         if os.getenv("VITE_DOWNLOAD_PATH"):
           download.DOWNLOAD_PATH = os.getenv("VITE_DOWNLOAD_PATH")
-        print(json.dumps({"type": "status", "message": f"Env path set to {ENV_PATH}"}), flush=True)
+        safe_print({"type": "status", "message": f"Env path set to {ENV_PATH}"})
 
       # Choice 7: Get current download path
       elif command["choice"] == 7:
-        print(json.dumps({"type": "download_path", "path": download.DOWNLOAD_PATH}), flush=True)
+        safe_print({"type": "download_path", "path": download.DOWNLOAD_PATH})
 
       # Choice 8: Get stream URL
       elif command["choice"] == 8:
-        sys.stderr.write(f"DEBUG: Processing stream for {command['name']}\n")
+        sys.stderr.write(f"DEBUG: Processing stream for {command.get('name')} (ID: {command.get('id')})\n")
         sys.stderr.flush()
-        res = spotify.searchSpotify(f"{command['name']} {command['artist']}")
-        if res and len(res) > 0:
-          stream_url = download.getStreamUrl(res[0])
-          if stream_url:
-            print(json.dumps({"type": "stream_url", "url": stream_url, "id": command.get("id")}), flush=True)
-          else:
-            print(json.dumps({"type": "error", "message": f"Failed getting stream URL for {command['name']}"}), flush=True)
+        
+        track_info = {
+            "id": command.get("id"),
+            "name": command.get("name"),
+            "artist": command.get("artist")
+        }
+        
+        stream_url = download.getStreamUrl(track_info)
+        if stream_url:
+          safe_print({"type": "stream_url", "url": stream_url, "id": command.get("id")})
         else:
-          print(json.dumps({"type": "error", "message": f"Could not find track {command['name']}"}), flush=True)
+          safe_print({"type": "error", "message": f"Failed getting stream URL for {command.get('name')}"})
+
+      # Choice 9: Get autoplay recommendations
+      elif command["choice"] == 9:
+        sys.stderr.write(f"DEBUG: Processing autoplay for {command.get('id')}\n")
+        sys.stderr.flush()
+        if "id" in command and command["id"]:
+          tracks = spotify.get_autoplay_recommendations(command["id"])
+          if isinstance(tracks, list):
+            safe_print({"type": "autoplay", "data": tracks})
+          else:
+            safe_print({"type": "error", "message": tracks.get("error", "Unknown error fetching autoplay")})
+        else:
+          safe_print({"type": "error", "message": "No id provided for autoplay"})
+
+    except Exception as e:
+      safe_print({"type": "error", "message": str(e)})
+
+  executor = concurrent.futures.ThreadPoolExecutor(max_workers=5)
+
+  while True:
+    try:
+      json_str = sys.stdin.readline()
+      if not json_str:
+        break
+
+      command = json.loads(json_str.strip())
+      executor.submit(process_command, command)
 
     except json.JSONDecodeError:
-      print(json.dumps({"type": "error", "message": "Invalid JSON received"}), flush=True)
+      safe_print({"type": "error", "message": "Invalid JSON received"})
     except Exception as e:
-      print(json.dumps({"type": "error", "message": str(e)}), flush=True)
+      safe_print({"type": "error", "message": str(e)})
 
 
 if __name__ == "__main__":

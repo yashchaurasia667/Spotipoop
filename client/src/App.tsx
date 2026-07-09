@@ -8,6 +8,8 @@ import {
 import MainLayout from "./Layouts/MainLayout";
 
 import Search from "./Pages/Search";
+import Library from "./Pages/Library";
+import PlaylistDetails from "./Pages/PlaylistDetails";
 
 import Downloads from "./components/Downloads";
 import Help from "./components/Help";
@@ -36,6 +38,22 @@ function App() {
             </DownloadsContextProvider>
           }
         ></Route>
+        <Route
+          path="library"
+          element={
+            <DownloadsContextProvider>
+              <Library />
+            </DownloadsContextProvider>
+          }
+        />
+        <Route
+          path="playlist/:id"
+          element={
+            <DownloadsContextProvider>
+              <PlaylistDetails />
+            </DownloadsContextProvider>
+          }
+        />
         <Route
           path="downloads"
           element={

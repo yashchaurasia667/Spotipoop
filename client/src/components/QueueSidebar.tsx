@@ -215,7 +215,7 @@ const QueueSidebar = () => {
   const globalContext = useContext(GlobalContext);
   if (!globalContext) throw new Error("No global Context");
 
-  const { isQueueVisible, userQueue, setPlayingSong, setUserQueue } =
+  const { isQueueVisible, userQueue, autoplayQueue, setPlayingSong, setUserQueue, setAutoplayQueue } =
     globalContext;
   const [draggedItemIdx, setDraggedItemIdx] = useState<number | null>(null);
 
@@ -228,21 +228,44 @@ const QueueSidebar = () => {
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-y-3 overflow-x-hidden">
-        {userQueue.length === 0 ? (
+        {userQueue.length > 0 && (
+          <div className="mb-4">
+            <h3 className="text-gray-400 text-sm mb-2 font-bold uppercase tracking-wider">Next In Queue</h3>
+            {userQueue.map((song, idx) => (
+              <QueueItem
+                key={`user-${song.id}-${idx}`}
+                song={song}
+                idx={idx}
+                userQueue={userQueue}
+                setUserQueue={setUserQueue!}
+                setPlayingSong={setPlayingSong!}
+                draggedItemIdx={draggedItemIdx}
+                setDraggedItemIdx={setDraggedItemIdx}
+              />
+            ))}
+          </div>
+        )}
+
+        {autoplayQueue && autoplayQueue.length > 0 && (
+          <div>
+            <h3 className="text-gray-400 text-sm mb-2 font-bold uppercase tracking-wider">Autoplay</h3>
+            {autoplayQueue.map((song, idx) => (
+              <QueueItem
+                key={`auto-${song.id}-${idx}`}
+                song={song}
+                idx={idx}
+                userQueue={autoplayQueue}
+                setUserQueue={setAutoplayQueue!}
+                setPlayingSong={setPlayingSong!}
+                draggedItemIdx={draggedItemIdx}
+                setDraggedItemIdx={setDraggedItemIdx}
+              />
+            ))}
+          </div>
+        )}
+
+        {userQueue.length === 0 && (!autoplayQueue || autoplayQueue.length === 0) && (
           <p className="text-gray-400 text-center mt-4">Your queue is empty.</p>
-        ) : (
-          userQueue.map((song, idx) => (
-            <QueueItem
-              key={`${song.id}-${idx}`}
-              song={song}
-              idx={idx}
-              userQueue={userQueue}
-              setUserQueue={setUserQueue!}
-              setPlayingSong={setPlayingSong!}
-              draggedItemIdx={draggedItemIdx}
-              setDraggedItemIdx={setDraggedItemIdx}
-            />
-          ))
         )}
       </div>
     </div>

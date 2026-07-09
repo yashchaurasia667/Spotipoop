@@ -25,3 +25,11 @@ export interface playlist {
   tracks: Song[];
   link: string;
 }
+
+export interface NativePlaylist {
+  id: string;
+  name: string;
+  description: string;
+  cover: string;
+  songs: Song[];
+}

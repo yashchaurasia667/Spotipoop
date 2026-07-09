@@ -16,9 +16,12 @@
       "identifier": "fs:allow-exists",
       "comment": "Explicitly allow exists if default isn't enough"
     },
+    "fs:allow-read-text-file",
+    "fs:allow-write-text-file",
+    "fs:allow-mkdir",
     {
       "identifier": "fs:scope",
-      "allow": [{ "path": "$APPDATA/**" }]
+      "allow": [{ "path": "$APPDATA/**" }, { "path": "$APPDATA" }]
     },
     {
       "identifier": "shell:allow-spawn",

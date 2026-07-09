@@ -1,8 +1,9 @@
 import { Child, Command } from "@tauri-apps/plugin-shell";
 import { appDataDir, join } from "@tauri-apps/api/path";
+import { readTextFile, writeTextFile, exists, BaseDirectory, mkdir } from "@tauri-apps/plugin-fs";
 import React, { useState, ReactNode, useEffect, useRef } from "react";
 import GlobalContext from "./GlobalContext";
-import { Song, playlist as PlaylistType } from "../../types";
+import { Song, playlist as PlaylistType, NativePlaylist } from "../../types";
 
 interface GlobalContextProviderProps {
   children: ReactNode;
@@ -23,6 +24,8 @@ const GlobalContextProvider: React.FC<GlobalContextProviderProps> = ({
   const [playingSong, setPlayingSong] = useState<Song | null>(null);
   const [userQueue, setUserQueue] = useState<Song[]>([]);
   const [autoplayQueue, setAutoplayQueue] = useState<Song[]>([]);
+  const [recentSongs, setRecentSongs] = useState<Song[]>([]);
+  const lastFetchedAutoplayId = useRef<string | null>(null);
   const [isQueueVisible, setIsQueueVisible] = useState<boolean>(false);
   const [preloadedUrls, setPreloadedUrls] = useState<Record<string, string>>({});
   const [query, setQuery] = useState<string>("");
@@ -136,6 +139,21 @@ const GlobalContextProvider: React.FC<GlobalContextProviderProps> = ({
                 setStreamUrl(parsed.url);
               }
             }
+            // --- 5. Handle Autoplay ---
+            else if (parsed.type === "autoplay") {
+              if (Array.isArray(parsed.data)) {
+                const mappedAutoplay = parsed.data.map((track: any, idx: number) => ({
+                  album: track.album || "Unknown Album",
+                  artists: track.artist || "Unknown Artist",
+                  duration: track.length || "0:00",
+                  images: track.cover || "",
+                  index: (idx + 1).toString(),
+                  name: track.name || "Unknown Track",
+                  id: track.id,
+                }));
+                setAutoplayQueue(mappedAutoplay);
+              }
+            }
           }
         } catch (e) {
           console.error("JSON Parsing error in Provider:", e);
@@ -181,6 +199,38 @@ const GlobalContextProvider: React.FC<GlobalContextProviderProps> = ({
     };
   }, []);
 
+  const loadPreferences = async () => {
+    try {
+      try {
+        const dataDir = await appDataDir();
+        await mkdir(dataDir, { recursive: true });
+      } catch (e) {}
+      
+      const hasPrefs = await exists("preferences.json", { baseDir: BaseDirectory.AppData });
+      if (hasPrefs) {
+        const contents = await readTextFile("preferences.json", { baseDir: BaseDirectory.AppData });
+        const prefs = JSON.parse(contents);
+        if (prefs.recentSongs) {
+          setRecentSongs(prefs.recentSongs);
+        }
+      }
+    } catch (e) {
+      console.error("Error loading preferences:", e);
+    }
+  };
+
+  const savePreferences = async (recent: Song[]) => {
+    try {
+      try {
+        const dataDir = await appDataDir();
+        await mkdir(dataDir, { recursive: true });
+      } catch (e) {}
+      await writeTextFile("preferences.json", JSON.stringify({ recentSongs: recent }), { baseDir: BaseDirectory.AppData });
+    } catch (e) {
+      console.error("Error saving preferences:", e);
+    }
+  };
+
   useEffect(() => {
     if (playingSong && childRef.current && backendStatus) {
       if (preloadedUrls[playingSong.id]) {
@@ -201,8 +251,27 @@ const GlobalContextProvider: React.FC<GlobalContextProviderProps> = ({
           ).catch(console.error);
         }
       }
+      // Update recent history
+      setRecentSongs(prev => {
+        // Prevent duplicate consecutive entries and bring to front
+        const filtered = prev.filter(s => s.id !== playingSong.id);
+        const next = [playingSong, ...filtered].slice(0, 20); // keep last 20
+        savePreferences(next);
+        return next;
+      });
     }
   }, [playingSong, backendStatus, preloadedUrls]);
+
+  // Autoplay Trigger
+  useEffect(() => {
+    if (backendStatus && childRef.current && autoplayQueue.length === 0) {
+      const idToFetch = playingSong ? playingSong.id : (recentSongs.length > 0 ? recentSongs[0].id : null);
+      if (idToFetch && lastFetchedAutoplayId.current !== idToFetch) {
+        lastFetchedAutoplayId.current = idToFetch;
+        childRef.current.write(JSON.stringify({ choice: 9, id: idToFetch }) + "\n").catch(console.error);
+      }
+    }
+  }, [playingSong, autoplayQueue.length, backendStatus, recentSongs]);
 
   useEffect(() => {
     if (!childRef.current || !backendStatus) return;
@@ -235,11 +304,21 @@ const GlobalContextProvider: React.FC<GlobalContextProviderProps> = ({
     setUserQueue((prev) => [...prev, song]);
   };
 
+  const handleSetPlayingSong = (song: Song | null) => {
+    setPlayingSong(song);
+    if (song) {
+      lastFetchedAutoplayId.current = null;
+      setAutoplayQueue([]); // User explicitly played a song, reset autoplay to adapt
+    }
+  };
+
   const playNextInQueue = () => {
     if (userQueue.length > 0) {
       const nextSong = userQueue[0];
       setUserQueue((prev) => prev.slice(1));
       setPlayingSong(nextSong);
+      lastFetchedAutoplayId.current = null;
+      setAutoplayQueue([]); // Adapt autoplay to the latest user queue song
     } else if (autoplayQueue.length > 0) {
       const nextSong = autoplayQueue[0];
       setAutoplayQueue((prev) => prev.slice(1));
@@ -249,6 +328,109 @@ const GlobalContextProvider: React.FC<GlobalContextProviderProps> = ({
       setPlayingSong(null);
       setStreamUrl(null);
     }
+  };
+
+  const [nativePlaylists, setNativePlaylists] = useState<NativePlaylist[]>([]);
+
+  const loadNativePlaylists = async () => {
+    try {
+      try {
+        const dataDir = await appDataDir();
+        await mkdir(dataDir, { recursive: true });
+      } catch (e) {
+        // Ignore mkdir error if it already exists
+      }
+      
+      const hasPlaylists = await exists("playlists.json", { baseDir: BaseDirectory.AppData });
+      if (hasPlaylists) {
+        const contents = await readTextFile("playlists.json", { baseDir: BaseDirectory.AppData });
+        setNativePlaylists(JSON.parse(contents));
+      }
+    } catch (e) {
+      console.error("Error loading playlists:", e);
+    }
+  };
+
+  const saveNativePlaylists = async (playlists: NativePlaylist[]) => {
+    try {
+      try {
+        const dataDir = await appDataDir();
+        await mkdir(dataDir, { recursive: true });
+      } catch (e) {
+        // Ignore mkdir error
+      }
+      await writeTextFile("playlists.json", JSON.stringify(playlists), { baseDir: BaseDirectory.AppData });
+    } catch (e) {
+      console.error("Error saving playlists:", e);
+    }
+  };
+
+
+
+  useEffect(() => {
+    loadNativePlaylists();
+    loadPreferences();
+  }, []);
+
+  const createPlaylist = async (name: string, description: string, cover: string) => {
+    const newPlaylist: NativePlaylist = {
+      id: crypto.randomUUID(),
+      name,
+      description,
+      cover,
+      songs: []
+    };
+    const updated = [...nativePlaylists, newPlaylist];
+    setNativePlaylists(updated);
+    await saveNativePlaylists(updated);
+  };
+
+  const updatePlaylist = async (id: string, updates: Partial<NativePlaylist>) => {
+    const updated = nativePlaylists.map(p => p.id === id ? { ...p, ...updates } : p);
+    setNativePlaylists(updated);
+    await saveNativePlaylists(updated);
+  };
+
+  const deletePlaylist = async (id: string) => {
+    const updated = nativePlaylists.filter(p => p.id !== id);
+    setNativePlaylists(updated);
+    await saveNativePlaylists(updated);
+  };
+
+  const addSongToPlaylist = async (playlistId: string, song: Song) => {
+    const updated = nativePlaylists.map(p => {
+      if (p.id === playlistId) {
+        return { ...p, songs: [...p.songs, song] };
+      }
+      return p;
+    });
+    setNativePlaylists(updated);
+    await saveNativePlaylists(updated);
+  };
+
+  const removeSongFromPlaylist = async (playlistId: string, songIdx: number) => {
+    const updated = nativePlaylists.map(p => {
+      if (p.id === playlistId) {
+        return { ...p, songs: p.songs.filter((_, i) => i !== songIdx) };
+      }
+      return p;
+    });
+    setNativePlaylists(updated);
+    await saveNativePlaylists(updated);
+  };
+
+  const reorderPlaylist = async (playlistId: string, startIndex: number, endIndex: number) => {
+    const updated = nativePlaylists.map(p => {
+      if (p.id === playlistId) {
+        const newSongs = [...p.songs];
+        const [removed] = newSongs.splice(startIndex, 1);
+        newSongs.splice(endIndex, 0, removed);
+        return { ...p, songs: newSongs };
+      }
+      return p;
+    });
+    setNativePlaylists(updated);
+    await saveNativePlaylists(updated);
   };
 
   const value = {
@@ -270,7 +452,7 @@ const GlobalContextProvider: React.FC<GlobalContextProviderProps> = ({
     streamUrl,
     setStreamUrl,
     playingSong,
-    setPlayingSong,
+    setPlayingSong: handleSetPlayingSong,
     userQueue,
     setUserQueue,
     autoplayQueue,
@@ -279,10 +461,25 @@ const GlobalContextProvider: React.FC<GlobalContextProviderProps> = ({
     playNextInQueue,
     isQueueVisible,
     setIsQueueVisible,
+    nativePlaylists,
+    createPlaylist,
+    updatePlaylist,
+    deletePlaylist,
+    addSongToPlaylist,
+    removeSongFromPlaylist,
+    reorderPlaylist,
   };
 
   return (
-    <GlobalContext.Provider value={value}>{children}</GlobalContext.Provider>
+    <GlobalContext.Provider value={value}>
+      {children}
+      {/* Hidden audio tags to force WebKit to establish connections and pre-buffer TCP streams instantly */}
+      <div style={{ display: 'none' }}>
+        {Object.values(preloadedUrls).map((url, idx) => (
+          <audio key={idx} src={url} preload="auto" muted />
+        ))}
+      </div>
+    </GlobalContext.Provider>
   );
 };
 

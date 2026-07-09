@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { NavLink } from "react-router-dom";
 
-import { FaArrowDown, FaQuestion, FaSearch, FaSpotify } from "react-icons/fa";
+import { FaArrowDown, FaQuestion, FaSearch, FaSpotify, FaBook } from "react-icons/fa";
 import { CgProfile } from "react-icons/cg";
 
 const Navbar = () => {
@@ -13,6 +13,12 @@ const Navbar = () => {
       <div className="flex gap-x-4 items-center">
         <FaSearch size={25} className="" />
         {isHovered ? <p className="text-xl">Search</p> : ""}
+      </div>
+    ),
+    library: (
+      <div className="flex gap-x-4 items-center">
+        <FaBook size={25} className="" />
+        {isHovered ? <p className="text-xl">Library</p> : ""}
       </div>
     ),
     downloads: (
@@ -49,6 +55,9 @@ const Navbar = () => {
         />
         <NavLink to={"/"} className={"navlink"}>
           {pages.search}
+        </NavLink>
+        <NavLink to={"/library"} className={"navlink"}>
+          {pages.library}
         </NavLink>
         <NavLink to={"/downloads"} className={"navlink"}>
           {pages.downloads}

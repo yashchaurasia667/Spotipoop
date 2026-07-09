@@ -36,7 +36,7 @@ def format_track(track):
   length = f"{minutes}:{seconds:02d}"
 
   # Safely navigate nested dictionaries using .get()
-  thumbnails = track.get('thumbnails', [])
+  thumbnails = track.get('thumbnails') or track.get('thumbnail') or []
   thumbnail = thumbnails[-1]['url'] if thumbnails else None
 
   album_data = track.get('album', {})
@@ -46,7 +46,7 @@ def format_track(track):
       album_name = "Unknown Album"
 
   artists = track.get('artists', [])
-  artist_name = artists[0]['name'] if artists else ""
+  artist_name = ", ".join([a.get('name', '') for a in artists]) if artists else ""
 
   return {"id": track.get('videoId'), "name": track.get('title'), "artist": artist_name, "cover": thumbnail, "album": album_name, "length": length, "explicit": track.get("isExplicit", False)}
 
@@ -59,6 +59,26 @@ def searchSpotify(query: str):
     client = getYTMusicClient()
     results = client.search(query=query, filter="songs", limit=10)
     return [format_track(item) for item in results]
+  except Exception as e:
+    return {"error": str(e)}
+
+def get_autoplay_recommendations(video_id: str):
+  """
+  Fetches up to 50 related/autoplay songs based on a video ID.
+  """
+  try:
+    client = getYTMusicClient()
+    results = client.get_watch_playlist(videoId=video_id)
+    tracks = results.get("tracks", [])
+    
+    formatted_tracks = []
+    # Skip the first track as it's usually the requested video_id itself
+    for track in tracks[1:51]:
+      formatted = format_track(track)
+      if formatted and formatted["id"]:
+        formatted_tracks.append(formatted)
+        
+    return formatted_tracks
   except Exception as e:
     return {"error": str(e)}
 

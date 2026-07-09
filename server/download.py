@@ -116,19 +116,25 @@ def downloadAudio(track, quality):
   return False
 
 def getStreamUrl(track):
-  query = f"{track.get('name')} {track.get('artist')} official audio"
-  if track.get("explicit"):
-    query = f"{query} explicit"
+  video_id = track.get("id")
+  if video_id:
+    target = f"https://www.youtube.com/watch?v={video_id}"
+  else:
+    query = f"{track.get('name')} {track.get('artist')} official audio"
+    if track.get("explicit"):
+      query = f"{query} explicit"
+    target = f"ytsearch1:{query}"
 
   ydl_opts = {
-      'format': 'bestaudio/best',
+      'format': 'bestaudio[ext=m4a]/bestaudio/best',
       'quiet': True,
       'noplaylist': True,
+      'extract_flat': False,
   }
 
   with yt_dlp.YoutubeDL(ydl_opts) as ydl:
     try:
-      info = ydl.extract_info(f"ytsearch1:{query}", download=False)
+      info = ydl.extract_info(target, download=False)
       if 'entries' in info and len(info['entries']) > 0:
           info = info['entries'][0]
           
