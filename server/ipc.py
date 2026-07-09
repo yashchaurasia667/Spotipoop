@@ -111,7 +111,7 @@ def main():
         if res and len(res) > 0:
           stream_url = download.getStreamUrl(res[0])
           if stream_url:
-            print(json.dumps({"type": "stream_url", "url": stream_url}), flush=True)
+            print(json.dumps({"type": "stream_url", "url": stream_url, "id": command.get("id")}), flush=True)
           else:
             print(json.dumps({"type": "error", "message": f"Failed getting stream URL for {command['name']}"}), flush=True)
         else:

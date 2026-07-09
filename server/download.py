@@ -120,18 +120,18 @@ def getStreamUrl(track):
   if track.get("explicit"):
     query = f"{query} explicit"
 
-  video_urls = getYoutubeLink(query, limit=1)
-  if not video_urls:
-    return None
-
   ydl_opts = {
       'format': 'bestaudio/best',
       'quiet': True,
+      'noplaylist': True,
   }
 
   with yt_dlp.YoutubeDL(ydl_opts) as ydl:
     try:
-      info = ydl.extract_info(video_urls[0], download=False)
+      info = ydl.extract_info(f"ytsearch1:{query}", download=False)
+      if 'entries' in info and len(info['entries']) > 0:
+          info = info['entries'][0]
+          
       if 'url' in info:
           return info['url']
       # Sometimes the URL is nested in requested_formats

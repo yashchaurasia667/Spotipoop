@@ -15,11 +15,16 @@ const GlobalContextProvider: React.FC<GlobalContextProviderProps> = ({
   const [backendStatus, setBackendStatus] = useState<boolean>(false);
   const childRef = useRef<Child | null>(null);
   const isSpawning = useRef(false);
+  const preloadingIds = useRef<Set<string>>(new Set());
 
   // States
   const [downloadPath, setDownloadPath] = useState<string>("");
   const [streamUrl, setStreamUrl] = useState<string | null>(null);
   const [playingSong, setPlayingSong] = useState<Song | null>(null);
+  const [userQueue, setUserQueue] = useState<Song[]>([]);
+  const [autoplayQueue, setAutoplayQueue] = useState<Song[]>([]);
+  const [isQueueVisible, setIsQueueVisible] = useState<boolean>(false);
+  const [preloadedUrls, setPreloadedUrls] = useState<Record<string, string>>({});
   const [query, setQuery] = useState<string>("");
   const [qtype, setQtype] = useState<"Playlist" | "Name">("Name");
   const [loading, setLoading] = useState<boolean>(false);
@@ -125,7 +130,11 @@ const GlobalContextProvider: React.FC<GlobalContextProviderProps> = ({
             }
             // --- 4. Handle Stream URL ---
             else if (parsed.type === "stream_url") {
-              setStreamUrl(parsed.url);
+              if (parsed.id) {
+                setPreloadedUrls(prev => ({ ...prev, [parsed.id]: parsed.url }));
+              } else {
+                setStreamUrl(parsed.url);
+              }
             }
           }
         } catch (e) {
@@ -174,16 +183,73 @@ const GlobalContextProvider: React.FC<GlobalContextProviderProps> = ({
 
   useEffect(() => {
     if (playingSong && childRef.current && backendStatus) {
-      setStreamUrl(null); // Clear previous URL while loading
-      childRef.current.write(
-        JSON.stringify({
-          choice: 8,
-          name: playingSong.name,
-          artist: playingSong.artists,
-        }) + "\n"
-      ).catch(console.error);
+      if (preloadedUrls[playingSong.id]) {
+        // Use cached URL if available
+        setStreamUrl(preloadedUrls[playingSong.id]);
+      } else {
+        // Only request if not already preloading
+        if (!preloadingIds.current.has(playingSong.id)) {
+          preloadingIds.current.add(playingSong.id);
+          setStreamUrl(null); // Clear previous URL while loading
+          childRef.current.write(
+            JSON.stringify({
+              choice: 8,
+              name: playingSong.name,
+              artist: playingSong.artists,
+              id: playingSong.id,
+            }) + "\n"
+          ).catch(console.error);
+        }
+      }
     }
-  }, [playingSong, backendStatus]);
+  }, [playingSong, backendStatus, preloadedUrls]);
+
+  useEffect(() => {
+    if (!childRef.current || !backendStatus) return;
+
+    // Preload next 2 songs
+    const nextSongs = [...userQueue, ...autoplayQueue].slice(0, 2);
+    nextSongs.forEach(song => {
+      if (!preloadedUrls[song.id] && !preloadingIds.current.has(song.id)) {
+        preloadingIds.current.add(song.id);
+        childRef.current?.write(
+          JSON.stringify({
+            choice: 8,
+            name: song.name,
+            artist: song.artists,
+            id: song.id,
+          }) + "\n"
+        ).catch(console.error);
+      }
+    });
+  }, [userQueue, autoplayQueue, backendStatus, preloadedUrls]);
+
+  // Autoplay if a song is added to an empty queue while nothing is playing
+  useEffect(() => {
+    if (!playingSong && (userQueue.length > 0 || autoplayQueue.length > 0)) {
+      playNextInQueue();
+    }
+  }, [playingSong, userQueue, autoplayQueue]);
+
+  const addToUserQueue = (song: Song) => {
+    setUserQueue((prev) => [...prev, song]);
+  };
+
+  const playNextInQueue = () => {
+    if (userQueue.length > 0) {
+      const nextSong = userQueue[0];
+      setUserQueue((prev) => prev.slice(1));
+      setPlayingSong(nextSong);
+    } else if (autoplayQueue.length > 0) {
+      const nextSong = autoplayQueue[0];
+      setAutoplayQueue((prev) => prev.slice(1));
+      setPlayingSong(nextSong);
+    } else {
+      // Nothing to play
+      setPlayingSong(null);
+      setStreamUrl(null);
+    }
+  };
 
   const value = {
     query,
@@ -205,6 +271,14 @@ const GlobalContextProvider: React.FC<GlobalContextProviderProps> = ({
     setStreamUrl,
     playingSong,
     setPlayingSong,
+    userQueue,
+    setUserQueue,
+    autoplayQueue,
+    setAutoplayQueue,
+    addToUserQueue,
+    playNextInQueue,
+    isQueueVisible,
+    setIsQueueVisible,
   };
 
   return (

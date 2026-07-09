@@ -1,6 +1,6 @@
 import { useContext } from "react";
 import { toast } from "react-toastify";
-import { FaPlay, FaDownload } from "react-icons/fa";
+import { FaPlay, FaDownload, FaPlus } from "react-icons/fa";
 import { Song } from "../types";
 
 import GlobalContext from "../context/globalContext/GlobalContext";
@@ -21,7 +21,7 @@ const SongTile = ({
   const downloadContext = useContext(DownloadsContext);
   if (!downloadContext) throw new Error("No download context");
 
-  const { backendStatus, childProc, downloadPath, setPlayingSong } = globalContext;
+  const { backendStatus, childProc, downloadPath, setPlayingSong, addToUserQueue } = globalContext;
   const { createDownload } = downloadContext;
 
   const handleDownload = async (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -81,6 +81,24 @@ const SongTile = ({
       <div className="album truncate">{album}</div>
       <div>{duration}</div>
       <div className="flex items-center justify-end gap-x-6">
+        <button
+          className="text-gray-400 hover:text-white transition-colors cursor-pointer z-10 flex items-center gap-x-2 text-sm"
+          onClick={(e) => {
+            e.stopPropagation();
+            if (addToUserQueue) {
+              addToUserQueue({ index, images, name, artists, album, duration, id });
+              toast.success("Added to Queue", {
+                position: "top-right",
+                autoClose: 2000,
+                hideProgressBar: true,
+                theme: "dark",
+              });
+            }
+          }}
+          title="Add to Queue"
+        >
+          <FaPlus />
+        </button>
         <button
           className="text-gray-400 hover:text-white transition-colors cursor-pointer z-10 flex items-center gap-x-2 text-sm"
           onClick={(e) => {

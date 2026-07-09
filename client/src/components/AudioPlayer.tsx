@@ -1,12 +1,12 @@
 import React, { useContext, useRef, useEffect, useState } from "react";
 import GlobalContext from "../context/globalContext/GlobalContext";
-import { FaPlay, FaPause, FaVolumeUp, FaVolumeMute } from "react-icons/fa";
+import { FaPlay, FaPause, FaVolumeUp, FaVolumeMute, FaStepForward, FaStepBackward, FaList } from "react-icons/fa";
 
 const AudioPlayer = () => {
   const globalContext = useContext(GlobalContext);
   if (!globalContext) throw new Error("No global Context");
 
-  const { streamUrl, playingSong } = globalContext;
+  const { streamUrl, playingSong, playNextInQueue, isQueueVisible, setIsQueueVisible } = globalContext;
   
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -100,6 +100,12 @@ const AudioPlayer = () => {
       {/* Player Controls */}
       <div className="flex flex-col items-center gap-y-2 w-2/4">
         <div className="flex items-center gap-x-6">
+          <button 
+            className="text-gray-400 hover:text-white transition-colors disabled:opacity-50"
+            disabled={!streamUrl}
+          >
+            <FaStepBackward size={14} />
+          </button>
           <button
             onClick={togglePlay}
             disabled={!streamUrl}
@@ -110,6 +116,16 @@ const AudioPlayer = () => {
             ) : (
               <FaPlay className="text-black ml-1" size={14} />
             )}
+          </button>
+          <button 
+            className="text-gray-400 hover:text-white transition-colors disabled:opacity-50"
+            disabled={!streamUrl}
+            onClick={() => {
+              setIsPlaying(false);
+              if (playNextInQueue) playNextInQueue();
+            }}
+          >
+            <FaStepForward size={14} />
           </button>
         </div>
         <div className="w-full flex items-center gap-x-3 text-sm text-gray-400 group">
@@ -128,8 +144,15 @@ const AudioPlayer = () => {
         </div>
       </div>
 
-      {/* Volume */}
-      <div className="flex items-center gap-x-3 w-1/4 justify-end group">
+      {/* Volume & Queue */}
+      <div className="flex items-center gap-x-4 w-1/4 justify-end group">
+        <button 
+          onClick={() => setIsQueueVisible && setIsQueueVisible(!isQueueVisible)}
+          className={`hover:text-white transition-colors ${isQueueVisible ? "text-purple-500" : "text-gray-400"}`}
+          title="Queue"
+        >
+          <FaList size={16} />
+        </button>
         <button onClick={toggleMute} className="text-gray-400 hover:text-white">
           {isMuted || volume === 0 ? <FaVolumeMute size={18} /> : <FaVolumeUp size={18} />}
         </button>
@@ -148,7 +171,10 @@ const AudioPlayer = () => {
       <audio
         ref={audioRef}
         onTimeUpdate={handleTimeUpdate}
-        onEnded={() => setIsPlaying(false)}
+        onEnded={() => {
+          setIsPlaying(false);
+          if (playNextInQueue) playNextInQueue();
+        }}
       />
     </div>
   );

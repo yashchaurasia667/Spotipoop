@@ -22,8 +22,15 @@ interface GlobalContextType {
   downloadPath: string;
   childProc: Child | undefined;
   startBackend: () => Promise<void>;
+  userQueue: Song[];
+  setUserQueue: (queue: Song[]) => void;
+  autoplayQueue: Song[];
+  setAutoplayQueue: (queue: Song[]) => void;
+  addToUserQueue: (song: Song) => void;
+  playNextInQueue: () => void;
+  isQueueVisible: boolean;
+  setIsQueueVisible: (visible: boolean) => void;
 }
-
 const GlobalContext = React.createContext(
   <GlobalContextType | undefined>undefined,
 );
