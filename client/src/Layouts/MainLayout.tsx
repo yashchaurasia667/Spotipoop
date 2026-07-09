@@ -1,15 +1,12 @@
-import { useContext } from "react";
 import { Outlet } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 
 import Navbar from "../components/Navbar";
 import AudioPlayer from "../components/AudioPlayer";
 import QueueSidebar from "../components/QueueSidebar";
-import GlobalContext from "../context/globalContext/GlobalContext";
 
 const MainLayout = () => {
-  const globalContext = useContext(GlobalContext);
-  const isQueueVisible = globalContext?.isQueueVisible || false;
+  
 
   return (
     <div className="h-screen flex flex-col">

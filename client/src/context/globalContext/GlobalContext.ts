@@ -28,6 +28,7 @@ interface GlobalContextType {
   setAutoplayQueue: (queue: Song[]) => void;
   addToUserQueue: (song: Song) => void;
   playNextInQueue: () => void;
+  playPreviousInQueue: () => void;
   isQueueVisible: boolean;
   setIsQueueVisible: (visible: boolean) => void;
   nativePlaylists: NativePlaylist[];

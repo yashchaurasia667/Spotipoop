@@ -7,6 +7,10 @@ import GlobalContext from "../context/globalContext/GlobalContext";
 import DownloadsContext from "../context/downloadsContext/DownloadsContext";
 import AddToPlaylistModal from "./AddToPlaylistModal";
 
+interface SongTileProps extends Song {
+  isFocused?: boolean;
+}
+
 const SongTile = ({
   index,
   images,
@@ -15,7 +19,8 @@ const SongTile = ({
   album,
   duration,
   id,
-}: Song) => {
+  isFocused,
+}: SongTileProps) => {
   const globalContext = useContext(GlobalContext);
   if (!globalContext) throw new Error("No global Context");
 
@@ -60,7 +65,7 @@ const SongTile = ({
   return (
     <>
       <div 
-        className="overflow-hidden font-semibold w-full h-20 grid grid-cols-[3fr_2fr_1fr_1fr] gap-x-8 items-center rounded-lg bg-[#242424] mt-3 px-6 py-4 hover:bg-[#2a2a2a] transition-colors cursor-pointer group"
+        className={`overflow-hidden font-semibold w-full h-20 grid grid-cols-[3fr_2fr_1fr_1fr] gap-x-8 items-center rounded-lg mt-3 px-6 py-4 hover:bg-[#2a2a2a] transition-all cursor-pointer group ${isFocused ? 'bg-[#3a3a3a] border-l-4 border-purple-500 shadow-[0_0_15px_rgba(168,85,247,0.3)]' : 'bg-[#242424]'}`}
         onClick={() => {
           if (setPlayingSong) {
             setPlayingSong({ index, images, name, artists, album, duration, id });

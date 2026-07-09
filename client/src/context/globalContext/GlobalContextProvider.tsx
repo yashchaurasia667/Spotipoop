@@ -330,6 +330,16 @@ const GlobalContextProvider: React.FC<GlobalContextProviderProps> = ({
     }
   };
 
+  const playPreviousInQueue = () => {
+    if (recentSongs.length > 1) {
+      const previousSong = recentSongs[1];
+      if (playingSong) {
+        setUserQueue((prev) => [playingSong, ...prev]);
+      }
+      handleSetPlayingSong(previousSong);
+    }
+  };
+
   const [nativePlaylists, setNativePlaylists] = useState<NativePlaylist[]>([]);
 
   const loadNativePlaylists = async () => {
@@ -459,6 +469,7 @@ const GlobalContextProvider: React.FC<GlobalContextProviderProps> = ({
     setAutoplayQueue,
     addToUserQueue,
     playNextInQueue,
+    playPreviousInQueue,
     isQueueVisible,
     setIsQueueVisible,
     nativePlaylists,

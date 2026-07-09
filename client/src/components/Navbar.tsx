@@ -2,7 +2,7 @@ import { useState } from "react";
 import { NavLink } from "react-router-dom";
 
 import { FaArrowDown, FaQuestion, FaSearch, FaSpotify, FaBook } from "react-icons/fa";
-import { CgProfile } from "react-icons/cg";
+
 
 const Navbar = () => {
   const [keepOpen, setKeepOpen] = useState<boolean>(false);

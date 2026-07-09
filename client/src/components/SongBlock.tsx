@@ -1,4 +1,4 @@
-import { useContext, useMemo } from "react";
+import { useContext, useMemo, useState, useEffect } from "react";
 
 import { PacmanLoader } from "react-spinners";
 
@@ -11,11 +11,43 @@ const SongBlock = () => {
   const context = useContext(GlobalContext);
   if (!context) throw new Error("No GlobalContext");
 
-  const { songs, loading, playlist } = context;
+  const { songs, loading, playlist, setPlayingSong } = context;
+
+  const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
+
+  useEffect(() => {
+    setFocusedIndex(null);
+  }, [songs]);
+
+  useEffect(() => {
+    if (songs.length === 0) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't interfere if user is typing in the search bar
+      const activeTag = document.activeElement?.tagName.toLowerCase();
+      if (activeTag === "input" || activeTag === "textarea") return;
+
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setFocusedIndex(prev => prev === null ? 0 : Math.min(prev + 1, songs.length - 1));
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setFocusedIndex(prev => prev === null ? songs.length - 1 : Math.max(prev - 1, 0));
+      } else if (e.key === "Enter") {
+        if (focusedIndex !== null && setPlayingSong) {
+          e.preventDefault();
+          setPlayingSong(songs[focusedIndex]);
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [songs, focusedIndex, setPlayingSong]);
 
   const renderResult = useMemo(() => {
-    return songs.map((song, index) => <SongTile key={index} {...song} />);
-  }, [songs]);
+    return songs.map((song, index) => <SongTile key={index} {...song} isFocused={index === focusedIndex} />);
+  }, [songs, focusedIndex]);
 
   return (
     <>

@@ -1,7 +1,7 @@
 import React, { useContext, useState, useRef } from "react";
 import GlobalContext from "../context/globalContext/GlobalContext";
 import { FaPlay, FaTimes, FaChevronUp, FaChevronDown } from "react-icons/fa";
-import { Song } from "../../types";
+import { Song } from "../types";
 
 const QueueItem = ({
   song,
@@ -26,7 +26,7 @@ const QueueItem = ({
   const startX = useRef<number | null>(null);
   const startY = useRef<number | null>(null);
   const wasSwiping = useRef(false);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const updateSwipe = (val: number) => {
     setSwipeOffset(val);

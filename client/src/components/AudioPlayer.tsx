@@ -6,7 +6,7 @@ const AudioPlayer = () => {
   const globalContext = useContext(GlobalContext);
   if (!globalContext) throw new Error("No global Context");
 
-  const { streamUrl, playingSong, playNextInQueue, isQueueVisible, setIsQueueVisible } = globalContext;
+  const { streamUrl, playingSong, playNextInQueue, playPreviousInQueue, isQueueVisible, setIsQueueVisible } = globalContext;
   
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -40,6 +40,29 @@ const AudioPlayer = () => {
       setIsPlaying(true);
     }
   };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const activeTag = document.activeElement?.tagName.toLowerCase();
+      if (activeTag === "input" || activeTag === "textarea") return;
+
+      if (e.code === "Space") {
+        e.preventDefault();
+        togglePlay();
+      } else if ((e.ctrlKey || e.metaKey) && e.key === "ArrowRight") {
+        e.preventDefault();
+        setIsPlaying(false);
+        if (playNextInQueue) playNextInQueue();
+      } else if ((e.ctrlKey || e.metaKey) && e.key === "ArrowLeft") {
+        e.preventDefault();
+        setIsPlaying(false);
+        if (playPreviousInQueue) playPreviousInQueue();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [togglePlay, playNextInQueue, playPreviousInQueue]);
 
   const toggleMute = () => {
     if (!audioRef.current) return;
@@ -103,6 +126,10 @@ const AudioPlayer = () => {
           <button 
             className="text-gray-400 hover:text-white transition-colors disabled:opacity-50"
             disabled={!streamUrl}
+            onClick={() => {
+              setIsPlaying(false);
+              if (playPreviousInQueue) playPreviousInQueue();
+            }}
           >
             <FaStepBackward size={14} />
           </button>

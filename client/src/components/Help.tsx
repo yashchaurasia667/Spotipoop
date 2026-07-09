@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 
 const Help = () => {
   const heading = "font-bold text-4xl mb-4 text-purple-500";
-  const subheading = "font-bold text-2xl mb-2 text-purple-200";
+  
   const link = "text-purple-500 font-semibold";
 
   return (

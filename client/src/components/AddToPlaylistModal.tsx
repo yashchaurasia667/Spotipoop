@@ -1,7 +1,7 @@
-import React, { useContext } from "react";
+import { useContext } from "react";
 import GlobalContext from "../context/globalContext/GlobalContext";
 import { FaTimes, FaList } from "react-icons/fa";
-import { Song } from "../../types";
+import { Song } from "../types";
 
 const AddToPlaylistModal = ({ song, onClose }: { song: Song, onClose: () => void }) => {
   const context = useContext(GlobalContext);

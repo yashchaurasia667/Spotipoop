@@ -1,4 +1,4 @@
-import { useContext } from "react";
+import { useContext, useEffect, useRef } from "react";
 
 import { FaChevronDown } from "react-icons/fa";
 import { toast } from "react-toastify";
@@ -19,6 +19,19 @@ const SearchBar = () => {
     backendStatus,
     childProc,
   } = context;
+  
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+        e.preventDefault();
+        inputRef.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -67,6 +80,7 @@ const SearchBar = () => {
         </div>
 
         <input
+          ref={inputRef}
           type="text"
           name="link"
           className="bg-[#242424] w-[90%] md:w-[40%] px-8 py-3 rounded-full outline-none border-2 border-[#acacac] hover:border-white focus:border-white focus:border-[3px] transition-all"

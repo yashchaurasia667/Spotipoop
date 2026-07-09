@@ -5,7 +5,7 @@ $DistDir = "./dist"
 
 # 1. Run PyInstaller
 Write-Host "Starting PyInstaller build..." -ForegroundColor Cyan
-pyinstaller --clean --onefile --name $TargetBinaryName ipc.py
+pyinstaller --clean --onefile --collect-data ytmusicapi --hidden-import bs4 --name $TargetBinaryName ipc.py
 
 # Check if build was successful
 if ($LASTEXITCODE -ne 0) {
