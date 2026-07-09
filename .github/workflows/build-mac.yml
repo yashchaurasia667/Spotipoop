@@ -1,0 +1,54 @@
+name: Build macOS App
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-mac:
+    runs-on: macos-latest
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11' 
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin
+
+      - name: Install Python Dependencies
+        run: pip install pyinstaller ytmusicapi bs4
+        working-directory: server
+
+      - name: Compile Python Sidecar (macOS)
+        run: |
+          pyinstaller --clean --onefile --collect-data ytmusicapi --hidden-import bs4 --name backend-aarch64-apple-darwin ipc.py
+          mkdir -p ../client/src-tauri/binaries
+          mv dist/backend-aarch64-apple-darwin ../client/src-tauri/binaries/
+        working-directory: server
+
+      - name: Install Node Dependencies
+        run: npm install
+        working-directory: client
+
+      - name: Build Tauri App (macOS)
+        run: npm run tauri build -- --target aarch64-apple-darwin
+        working-directory: client
+
+      - name: Upload macOS App
+        uses: actions/upload-artifact@v4
+        with:
+          name: spotipoop-mac-app
+          path: |
+            client/src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/*.dmg
+            client/src-tauri/target/aarch64-apple-darwin/release/bundle/macos/*.app

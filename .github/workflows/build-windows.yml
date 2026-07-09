@@ -1,0 +1,47 @@
+name: Build Windows App
+
+on:
+  workflow_dispatch: # Allows you to manually trigger the build
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11' 
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Python Dependencies
+        run: pip install pyinstaller ytmusicapi bs4
+        working-directory: server
+
+      - name: Compile Python Sidecar (Windows)
+        run: .\compile.ps1
+        working-directory: server
+
+      - name: Install Node Dependencies
+        run: npm install
+        working-directory: client
+
+      - name: Build Tauri App (Windows)
+        run: npm run tauri build
+        working-directory: client
+
+      - name: Upload Windows Installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: spotipoop-windows-installer
+          path: client/src-tauri/target/release/bundle/nsis/*.exe
