@@ -18,6 +18,8 @@ const GlobalContextProvider: React.FC<GlobalContextProviderProps> = ({
 
   // States
   const [downloadPath, setDownloadPath] = useState<string>("");
+  const [streamUrl, setStreamUrl] = useState<string | null>(null);
+  const [playingSong, setPlayingSong] = useState<Song | null>(null);
   const [query, setQuery] = useState<string>("");
   const [qtype, setQtype] = useState<"Playlist" | "Name">("Name");
   const [loading, setLoading] = useState<boolean>(false);
@@ -121,6 +123,10 @@ const GlobalContextProvider: React.FC<GlobalContextProviderProps> = ({
             else if (parsed.type === "status") {
               console.log("Backend Status:", parsed.message);
             }
+            // --- 4. Handle Stream URL ---
+            else if (parsed.type === "stream_url") {
+              setStreamUrl(parsed.url);
+            }
           }
         } catch (e) {
           console.error("JSON Parsing error in Provider:", e);
@@ -166,6 +172,19 @@ const GlobalContextProvider: React.FC<GlobalContextProviderProps> = ({
     };
   }, []);
 
+  useEffect(() => {
+    if (playingSong && childRef.current && backendStatus) {
+      setStreamUrl(null); // Clear previous URL while loading
+      childRef.current.write(
+        JSON.stringify({
+          choice: 8,
+          name: playingSong.name,
+          artist: playingSong.artists,
+        }) + "\n"
+      ).catch(console.error);
+    }
+  }, [playingSong, backendStatus]);
+
   const value = {
     query,
     setQuery,
@@ -182,6 +201,10 @@ const GlobalContextProvider: React.FC<GlobalContextProviderProps> = ({
     childProc,
     setBackendStatus,
     startBackend,
+    streamUrl,
+    setStreamUrl,
+    playingSong,
+    setPlayingSong,
   };
 
   return (

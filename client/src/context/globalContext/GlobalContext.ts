@@ -4,6 +4,10 @@ import { Song, playlist } from "../../types";
 import { Child } from "@tauri-apps/plugin-shell";
 
 interface GlobalContextType {
+  streamUrl: string | null;
+  setStreamUrl: (url: string | null) => void;
+  playingSong: Song | null;
+  setPlayingSong: (song: Song | null) => void;
   query: string;
   setQuery: (query: string) => void;
   qtype: "Playlist" | "Name";

@@ -115,6 +115,40 @@ def downloadAudio(track, quality):
 
   return False
 
+def getStreamUrl(track):
+  query = f"{track.get('name')} {track.get('artist')} official audio"
+  if track.get("explicit"):
+    query = f"{query} explicit"
+
+  video_urls = getYoutubeLink(query, limit=1)
+  if not video_urls:
+    return None
+
+  ydl_opts = {
+      'format': 'bestaudio/best',
+      'quiet': True,
+  }
+
+  with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+    try:
+      info = ydl.extract_info(video_urls[0], download=False)
+      if 'url' in info:
+          return info['url']
+      # Sometimes the URL is nested in requested_formats
+      elif 'requested_formats' in info and len(info['requested_formats']) > 0:
+          return info['requested_formats'][0]['url']
+      elif 'formats' in info and len(info['formats']) > 0:
+          # Get best audio format
+          formats = [f for f in info['formats'] if f.get('acodec') != 'none' and f.get('vcodec') == 'none']
+          if formats:
+              # Sort by quality
+              formats = sorted(formats, key=lambda x: x.get('abr', 0), reverse=True)
+              return formats[0]['url']
+          return info['formats'][-1]['url']
+    except Exception as e:
+      print(f"Error extracting stream URL: {e}")
+  return None
+
 
 if __name__ == "__main__":
   print("running download main")
